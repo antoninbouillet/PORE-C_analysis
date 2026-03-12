@@ -30,6 +30,10 @@ for i in "${!binNames[@]}"; do
 		${rDir}/bins_${binName}.bed \
 		${pairDir}/${sample}/${sample}_2.pairs.gz \
 		${cmDir}/${sample}/${sample}_${binName}.cool
+
+		wait
+
+		cooler balance ${cmDir}/${sample}/${sample}_${binName}.cool
 				
 	done
 	
