@@ -3,7 +3,7 @@
 # intersect regions with significant interaction differences with genes
 
 baseDir=/home/anton/Bureau/PORE-C_repo
-binsize=250kb
+binsize=1Mb
 
 comparisons=(alpha_beta alpha_STM)
 

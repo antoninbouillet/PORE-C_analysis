@@ -41,7 +41,6 @@ for (comparison in comparisons) {
 
   print(paste("comparison", comparison))
   cat(paste(sample1, "vs", sample2))
-
   
   cm1 <- cooler2bedpe(path=paste0(cmdir, sample1, "/", sample1, "_", binsize, ".cool"))
   cm2 <- cooler2bedpe(path=paste0(cmdir, sample2, "/", sample2, "_", binsize, ".cool"))

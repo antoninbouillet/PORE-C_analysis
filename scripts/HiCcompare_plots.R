@@ -5,14 +5,20 @@ library(dplyr)
 library(ggplot2)
 library(ggpubr)
 library(ggnewscale)
+library(ggvenn)
 
 binsizes <- c("1Mb", "500kb", "250kb")
 comparisons <- list(c("alpha", "beta"), c("alpha", "STM"))
 color1 <- "#5948d9"
+colorBeta <- "#48D959"
+colorSTM <- "#D95948"
+
+zoomChr = "NC_047561.1"
+zoomStart = 2e7
+zoomEnd = 5.5e7
+
 baseDir <- "/home/anton/Bureau/PORE-C_repo/"
 rDir <- paste0(baseDir, "data/regions")
-
-
 
 for (binsize in binsizes) {
 
@@ -40,11 +46,11 @@ for (binsize in binsizes) {
   	label1 <- "α"
   	if (sample2 == "beta") {
   		label2 <- "β"
-  		color2 <- "#48D959"
+  		color2 <- colorBeta
   		levels <- c("α+", "β+")
   	} else {
   		label2 <- "STM"
-  		color2 <- "#D95948"
+  		color2 <- colorSTM
   		levels <- c("α+", "STM+")
   	}
   
@@ -61,8 +67,13 @@ for (binsize in binsizes) {
   
   	all_bins$status <- factor(all_bins$status, levels = levels)
   	
+  	# save bins with signifiant interaction differences to check overlap between comparisons
+  	signif <- all_bins[all_bins$is_signif == T, ]
+  	signifName <- paste0("signif_", sample1, "_", sample2)
+	  assign(signifName, signif)
+
   	volcanoplot <- ggplot() + 
-  	  geom_point(data=all_bins[all_bins$is_signif == T, ],
+  	  geom_point(data=signif,
   		     aes(x = adj.M, y = pval_log, color = status),
   		     size=0.4, alpha=0.7) +
   	  geom_point(data=all_bins[all_bins$pval_log > 0 & all_bins$is_signif == F, ],
@@ -106,11 +117,11 @@ for (binsize in binsizes) {
   	       plot = maps, device = cairo_pdf, width = 8, height = 6)
   	
   	# zoom on one region of chr3 as an example
-  	mapZoom <- ggplot(data = all_bins[all_bins$chr1 == "NC_047561.1" & 
-  	                                 all_bins$start1 > 2e7 & 
-  	                                 all_bins$start1 < 5.5e7 &
-  	                                 all_bins$start2 > 2e7 & 
-  	                                 all_bins$start2 < 5.5e7, ])  + 
+  	mapZoom <- ggplot(data = all_bins[all_bins$chr1 == zoomChr & 
+  	                                 all_bins$start1 > zoomStart & 
+  	                                 all_bins$start1 < zoomEnd &
+  	                                 all_bins$start2 > zoomStart & 
+  	                                 all_bins$start2 < zoomEnd, ])  + 
   	  theme_bw(base_size=16) +
   	  theme(aspect.ratio = 1, panel.grid=element_blank(),
   	        strip.background = element_rect(fill="white", color="white"),
@@ -201,4 +212,76 @@ for (binsize in binsizes) {
   	ggsave(file.path(pdir, paste0("comp_distance_", sample1, "_", sample2, "_", binsize, ".pdf")), 
   	       plot = comp_d, device = cairo_pdf, width = 8, height = 6)
   }
+  
+  # venn diagrams
+  
+  pdir <- paste0(baseDir, "plots/HiCcompare/overlap")
+  comp <- full_join(signif_alpha_beta, signif_alpha_STM,
+                    by=join_by(chr1, start1, start2),
+                    suffix = c(".alpha_beta", ".alpha_STM")) 
+  
+  comp <- comp %>% 
+    mutate(
+
+      # total overlap
+      alpha_beta = !is.na(status.alpha_beta),
+      alpha_STM = !is.na(status.alpha_STM),
+
+      # alpha +  
+      alpha_beta_alpha = !is.na(status.alpha_beta) & status.alpha_beta == "α+",
+      alpha_STM_alpha  = !is.na(status.alpha_STM) & status.alpha_STM == "α+",
+      
+      # beta + / STM + 
+      alpha_beta_beta = !is.na(status.alpha_beta) & status.alpha_beta == "β+",
+      alpha_STM_STM   = !is.na(status.alpha_STM) & status.alpha_STM == "STM+",
+
+    )
+  
+    nb_size = 8.5
+    label_size = 12.5
+
+    p_all <- ggplot(data=comp) +
+    geom_venn(aes(A = alpha_beta,
+                  B = alpha_STM),
+        text_size = nb_size,
+	      set_name_size = 0) +
+    coord_fixed() +
+    labs(title="") +
+    theme_void(base_size=12) +
+    annotate("text", x=-0.8, y=1.3, label="α vs β", size=label_size) +
+    annotate("text", x=0.8, y=1.3, label="α vs STM", size=label_size)
+
+  
+  ggsave(file.path(pdir, paste0("Venn_total", binsize, ".pdf")),
+         plot = p_all, device = cairo_pdf, width = 8, height = 6)
+
+  p_alpha <- ggplot(data=comp[comp$status.alpha_beta == "α+" |
+                                comp$status.alpha_STM == "α+", ]) + 
+    geom_venn(aes(A = alpha_beta_alpha,
+                  B = alpha_STM_alpha),
+	      fill_color = c(color1, color1),
+	      text_size = nb_size,
+	      set_name_size = 0)+
+    coord_fixed() +
+    theme_void(base_size=18) +
+    annotate("text", x=-0.9, y=1.3, label="α vs β (α+)", size=label_size) +
+    annotate("text", x=0.9, y=1.3, label="α vs STM (α+)", size=label_size)
+  
+  ggsave(file.path(pdir, paste0("Venn_alpha_alpha_", binsize, ".pdf")),
+         plot = p_alpha, device = cairo_pdf, width = 8, height = 6)
+  
+  p_other <- ggplot(data=comp[comp$status.alpha_beta == "β+" |
+                                comp$status.alpha_STM == "STM+", ]) + 
+    geom_venn(aes(A = alpha_beta_beta, 
+                  B = alpha_STM_STM),
+              fill_color = c(colorBeta, colorSTM),
+	      text_size = nb_size,
+	      set_name_size = 0) +
+    coord_fixed() +
+    theme_void(base_size=18) +
+    annotate("text", x=-0.9, y=1.3, label="α vs β (β+)", size=label_size) +
+    annotate("text", x=0.9, y=1.3, label="α vs STM (STM+)", size=label_size)
+  
+  ggsave(file.path(pdir, paste0("Venn_beta_STM_", binsize, ".pdf")),
+         plot = p_other, device = cairo_pdf, width = 8, height = 6)
 }
