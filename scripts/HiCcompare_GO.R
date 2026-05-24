@@ -10,7 +10,7 @@ library(Cairo)
 library(ggplot2)
 library(dplyr)
 
-binsize = "250kb"
+binsize = "500kb"
 baseDir <- "/home/anton/Bureau/PORE-C_repo/"
 rDir <- paste0(baseDir, "data/regions")
 
@@ -84,6 +84,8 @@ for (comparison in comparisons) {
 	ggsave(file.path(pdir, paste0("GO_terms_bins_", binsize, "_", sample1, "_", sample2, "_all.pdf")), 
 	       plot = plotAll, device = cairo_pdf, width = 8, height = 6)
 
+	saveRDS(plotAll, file = file.path(pdir, paste0("GO_terms_bins_", binsize, "_", sample1, "_", sample2, "_all.rds")))
+
 	#genes sample1+ (alpha+)
 
 	liste_genes_map_1 <- gene_go_mapping %>% filter(Symbol %in% all_signif_1$V11) 
@@ -116,7 +118,6 @@ for (comparison in comparisons) {
 	ggsave(file.path(pdir, paste0("GO_terms_bins_", binsize, "_", sample1, "_", sample2, "_", status1, ".pdf")), 
 	       plot = plotS1, device = cairo_pdf, width = 8, height = 6)
 
-
 	#genes sample2+ (beta / STM)
 
 	liste_genes_map_2 <- gene_go_mapping %>% filter(Symbol %in% all_signif_2$V11) 
@@ -147,5 +148,6 @@ for (comparison in comparisons) {
 
 	ggsave(file.path(pdir, paste0("GO_terms_bins_", binsize, "_", sample1, "_", sample2, "_", status2, ".pdf")), 
 	       plot = plotS2, device = cairo_pdf, width = 8, height = 6)
+
 }
 

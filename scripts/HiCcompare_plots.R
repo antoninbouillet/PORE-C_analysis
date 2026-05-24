@@ -75,12 +75,12 @@ for (binsize in binsizes) {
   	volcanoplot <- ggplot() + 
   	  geom_point(data=signif,
   		     aes(x = adj.M, y = pval_log, color = status),
-  		     size=0.4, alpha=0.7) +
+  		     size=1, alpha=0.7) +
   	  geom_point(data=all_bins[all_bins$pval_log > 0 & all_bins$is_signif == F, ],
   		     aes(x = adj.M, y = pval_log),
-  		     size=0.4, alpha=0.7, color="grey") +
+  		     size=1, alpha=0.7, color="grey") +
   	  geom_hline(yintercept = -log10(0.05), linetype="dashed", linewidth=0.2) +
-  	  theme_bw(base_size=18) +
+  	  theme_bw(base_size=22) +
   	  theme(aspect.ratio = 1,
   		panel.grid = element_line(linetype="dashed", linewidth=0.2),
   		legend.title = element_blank()) +
@@ -91,6 +91,9 @@ for (binsize in binsizes) {
   	
   	  ggsave(file.path(pdir, paste0("volcanoplot_", sample1, "_", sample2, "_", binsize, ".pdf")), 
   	       plot = volcanoplot, device = cairo_pdf, width = 8, height = 6)
+
+	  # also save the plots as RDS objects to arrange them later
+	  saveRDS(volcanoplot, file = file.path(pdir, paste0("volcanoplot_", sample1, "_", sample2, "_", binsize, ".rds")))
   
   	  maps <- ggplot(data = all_bins)  + 
   	  theme_bw(base_size=7) +
@@ -122,7 +125,7 @@ for (binsize in binsizes) {
   	                                 all_bins$start1 < zoomEnd &
   	                                 all_bins$start2 > zoomStart & 
   	                                 all_bins$start2 < zoomEnd, ])  + 
-  	  theme_bw(base_size=16) +
+  	  theme_bw(base_size=18) +
   	  theme(aspect.ratio = 1, panel.grid=element_blank(),
   	        strip.background = element_rect(fill="white", color="white"),
   	        axis.text = element_text(color="black"),
@@ -143,6 +146,8 @@ for (binsize in binsizes) {
   	
   	ggsave(file.path(pdir, paste0("map_zoom_HiCcompare_", sample1, "_", sample2, "_", binsize, ".pdf")), 
   	       plot = mapZoom, device = cairo_pdf, width = 8, height = 6)
+
+	saveRDS(mapZoom, file = file.path(pdir, paste0("map_zoom_HiCcompare_", sample1, "_", sample2, "_", binsize, ".rds")))
   	
   	mean_IF1 <- all_bins %>% group_by(chr1, D) %>% select(chr1, D, adj.IF1) %>% summarize(meanIF=mean_se(adj.IF1)) %>% mutate(ech=label1)
   	mean_IF2 <- all_bins %>% group_by(chr1, D) %>% select(chr1, D, adj.IF2) %>% summarize(meanIF=mean_se(adj.IF2)) %>% mutate(ech=label2)
@@ -171,7 +176,7 @@ for (binsize in binsizes) {
   	
   	ggsave(file.path(pdir, paste0("contact_distance_binned_HiCcompare_", sample1, "_", sample2, "_", binsize, ".pdf")), 
   	       plot = cdbin, device = cairo_pdf, width = 8, height = 6)
-  
+
   	cd <- ggplot(data=all_IF) +
   	  theme_bw() +
   	  theme(strip.background = element_rect(fill="white", color="white"),
@@ -192,7 +197,7 @@ for (binsize in binsizes) {
   
   	ggsave(file.path(pdir, paste0("contact_distance_HiCcompare_", sample1, "_", sample2, "_", binsize, ".pdf")), 
   	       plot = cd, device = cairo_pdf, width = 8, height = 6)
-  	
+
   	# filtering the HIC tables by A value (mean of IF1 and IF2) tends to favor pairs with
   	# low IF (which are also the most distant) in the matrix with the lowest overall read counts (beta / STM)
   
@@ -211,6 +216,8 @@ for (binsize in binsizes) {
   	
   	ggsave(file.path(pdir, paste0("comp_distance_", sample1, "_", sample2, "_", binsize, ".pdf")), 
   	       plot = comp_d, device = cairo_pdf, width = 8, height = 6)
+
+	saveRDS(comp_d, file = file.path(pdir, paste0("comp_distance_", sample1, "_", sample2, "_", binsize, ".rds")))
   }
   
   # venn diagrams
@@ -237,8 +244,8 @@ for (binsize in binsizes) {
 
     )
   
-    nb_size = 8.5
-    label_size = 12.5
+    nb_size = 6
+    label_size = 8
 
     p_all <- ggplot(data=comp) +
     geom_venn(aes(A = alpha_beta,
@@ -247,13 +254,15 @@ for (binsize in binsizes) {
 	      set_name_size = 0) +
     coord_fixed() +
     labs(title="") +
-    theme_void(base_size=12) +
+    theme_void(base_size=10) +
     annotate("text", x=-0.8, y=1.3, label="α vs β", size=label_size) +
     annotate("text", x=0.8, y=1.3, label="α vs STM", size=label_size)
 
   
   ggsave(file.path(pdir, paste0("Venn_total", binsize, ".pdf")),
          plot = p_all, device = cairo_pdf, width = 8, height = 6)
+
+  saveRDS(p_all, file = file.path(pdir, paste0("Venn_total", binsize, ".rds")))
 
   p_alpha <- ggplot(data=comp[comp$status.alpha_beta == "α+" |
                                 comp$status.alpha_STM == "α+", ]) + 
@@ -263,12 +272,14 @@ for (binsize in binsizes) {
 	      text_size = nb_size,
 	      set_name_size = 0)+
     coord_fixed() +
-    theme_void(base_size=18) +
+    theme_void(base_size=10) +
     annotate("text", x=-0.9, y=1.3, label="α vs β (α+)", size=label_size) +
     annotate("text", x=0.9, y=1.3, label="α vs STM (α+)", size=label_size)
   
   ggsave(file.path(pdir, paste0("Venn_alpha_alpha_", binsize, ".pdf")),
          plot = p_alpha, device = cairo_pdf, width = 8, height = 6)
+
+  saveRDS(p_alpha, file = file.path(pdir, paste0("Venn_alpha_alpha_", binsize, ".rds")))
   
   p_other <- ggplot(data=comp[comp$status.alpha_beta == "β+" |
                                 comp$status.alpha_STM == "STM+", ]) + 
@@ -278,10 +289,13 @@ for (binsize in binsizes) {
 	      text_size = nb_size,
 	      set_name_size = 0) +
     coord_fixed() +
-    theme_void(base_size=18) +
+    theme_void(base_size=10) +
+    theme(plot.title = element_text(size = 10)) +
     annotate("text", x=-0.9, y=1.3, label="α vs β (β+)", size=label_size) +
     annotate("text", x=0.9, y=1.3, label="α vs STM (STM+)", size=label_size)
   
   ggsave(file.path(pdir, paste0("Venn_beta_STM_", binsize, ".pdf")),
          plot = p_other, device = cairo_pdf, width = 8, height = 6)
+
+  saveRDS(p_other, file = file.path(pdir, paste0("Venn_beta_STM_", binsize, ".rds")))
 }

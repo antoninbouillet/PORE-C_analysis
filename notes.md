@@ -1,0 +1,36 @@
+# à faire
+
+    - stats FAN-C
+    - overlap regions beta + / STM + 
+
+    - relancer pairtools avec différents paramètres BWA
+
+    - fig comparaison :
+        - volcanoplot alpha/beta alpha/STM
+        - boxplot distance régions signif ds boxplot
+        - diagramme de Venn beta+/STM+
+        - contact map log2 fold change / p value (ex. région)     
+        - + GO
+    
+- fig structure : 
+à faire : finir fig2 : ajouter track signif + bedmethyl
+     A :
+        - contact / distance 
+        - boxplot résumé
+    - B :
+        - map chr 3
+            - track regions signif HiCcompare
+            - + bedmethyl
+        - zoom région signif -> différentiel
+        - (mirroir différentiel alpha / beta ; alpha / STM
+
+   - basecalling : 
+    - pas de génome ref
+    - modèle r10 - modèle le + récent (qui ne chrash pas..)
+    - /!\ sélectionner même modèle que lors du séquençage 
+    - puis alignement & modkit
+    - /!\ bien noter options (pas de sauvegarde)
+
+## 13/03/26
+
+- ajout venn diagram
