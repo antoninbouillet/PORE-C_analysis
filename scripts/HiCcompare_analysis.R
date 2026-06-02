@@ -4,7 +4,7 @@ library(HiCcompare)
 library(dplyr)
 library(data.table)
 
-binsize <- "1Mb"
+binsize <- "500kb"
 comparisons <- list(c("alpha", "beta"), c("alpha", "STM"))
 
 print(comparisons)
@@ -74,9 +74,10 @@ for (comparison in comparisons) {
   all_bins <- do.call(rbind, tableList)
   all_signif <- do.call(rbind, signifTableList)
   
+  compStr = paste(comparison[1], "vs", comparison[2])
   # coordinates corresponding to the pairs with significant interaction differences (to intersect with the genes)
   all_signif_pos1 <- all_signif %>% mutate(log_p = -log10(p.adj)) %>% select(chr1, start1, end1, A, log_p, M) %>%rename(chr = "chr1", start = "start1", end = "end1") %>% mutate(A = 0)
-  all_signif_pos2 <- all_signif %>% mutate(log_p = -log10(p.adj)) %>% select(chr2, start2, end2, A, log_p, M)%>% rename(chr = "chr2", start = "start2", end = "end2") %>% mutate(A = 0)
+  all_signif_pos2 <- all_signif %>% mutate(log_p = -log10(p.adj)) %>% select(chr2, start2, end2, A, log_p, M) %>% rename(chr = "chr2", start = "start2", end = "end2") %>% mutate(A = 0)
   all_signif_bins <- rbind(all_signif_pos1, all_signif_pos2) %>% mutate()
     
   write.table(all_bins, file = file.path(rdir, paste0("all_bins_", sample1, "_", sample2, "_", binsize, ".bed")), 
@@ -85,4 +86,3 @@ for (comparison in comparisons) {
                 quote=F, row.names=F, col.names=F, sep="\t")
     
   }
-

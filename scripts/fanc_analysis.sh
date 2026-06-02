@@ -2,7 +2,8 @@
 
 source /home/anton/venv/chess/bin/activate
 
-binsizes=(1Mb 500kb 250kb 100kb)
+# binsizes=(1Mb 500kb 250kb 100kb)
+binsizes=(500kb)
 vminCp=-0.1
 vmaxCp=0.1
 
@@ -52,7 +53,9 @@ for binsize in "${binsizes[@]}"; do
 
 		    fancplot --width 6 -o ${pdir}/${sample}_${binsize}_${chromosome}_insulation.pdf \
 			    $chromosome -p triangular --title ${chromosome} ${contact_map} -l \
-			    -p scores ${baseDir}/data/matrices/${sample}_${binsize}.insulation
+			    -p bar --title "singif (α vs β)" ${regionsDir}/all_signif_regions_alpha_beta_${binsize}.bed \
+			    -p bar --title "singif (α vs STM)" ${regionsDir}/all_signif_regions_alpha_STM_${binsize}.bed \
+			    -p layer ${regionsDir}/genes.bed
 		done
 
 		pdftk ${pdir}/${sample}_${binsize}_*_oe.pdf output ${pdir}/${sample}_${binsize}_oe.pdf
@@ -64,3 +67,6 @@ for binsize in "${binsizes[@]}"; do
 		done
 	done
 done
+
+
+			    #-p scores ${baseDir}/data/matrices/${sample}_${binsize}.insulation \

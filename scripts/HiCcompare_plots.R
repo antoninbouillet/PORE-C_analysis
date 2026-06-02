@@ -67,8 +67,8 @@ for (binsize in binsizes) {
   
   	all_bins$status <- factor(all_bins$status, levels = levels)
   	
-  	# save bins with signifiant interaction differences to check overlap between comparisons
-  	signif <- all_bins[all_bins$is_signif == T, ]
+  	# save bins with significant interaction differences to check overlap between comparisons
+  	signif <- all_bins[all_bins$is_signif == TRUE, ]
   	signifName <- paste0("signif_", sample1, "_", sample2)
 	  assign(signifName, signif)
 
@@ -147,7 +147,7 @@ for (binsize in binsizes) {
   	ggsave(file.path(pdir, paste0("map_zoom_HiCcompare_", sample1, "_", sample2, "_", binsize, ".pdf")), 
   	       plot = mapZoom, device = cairo_pdf, width = 8, height = 6)
 
-	saveRDS(mapZoom, file = file.path(pdir, paste0("map_zoom_HiCcompare_", sample1, "_", sample2, "_", binsize, ".rds")))
+	  saveRDS(mapZoom, file = file.path(pdir, paste0("map_zoom_HiCcompare_", sample1, "_", sample2, "_", binsize, ".rds")))
   	
   	mean_IF1 <- all_bins %>% group_by(chr1, D) %>% select(chr1, D, adj.IF1) %>% summarize(meanIF=mean_se(adj.IF1)) %>% mutate(ech=label1)
   	mean_IF2 <- all_bins %>% group_by(chr1, D) %>% select(chr1, D, adj.IF2) %>% summarize(meanIF=mean_se(adj.IF2)) %>% mutate(ech=label2)
@@ -205,27 +205,32 @@ for (binsize in binsizes) {
   	  geom_boxplot(width=0.4, color="black", linewidth=0.8, outliers=F) +
   	  theme_bw(base_size=22) +
   	  theme(panel.grid=element_blank(),
-  		panel.border=element_rect(color="black"),
-  		axis.text = element_text(color="black"),
-  		axis.ticks = element_line(color="black"),
+  		panel.border=element_rect(color="black", linewidth=1),
+  		axis.text.y = element_text(color="black"),
+  		axis.ticks.y = element_line(color="black"),
+  		axis.text.x = element_blank(),
+  		axis.ticks.x = element_blank(),
+  		axis.title = element_text(size = 20),
+  		plot.background = element_blank(),
   		aspect.ratio=1.2,
   		legend.position="None") +
-  	  labs(y=paste0("Distance (", binsize, " bins)"), x="") +
-  	  stat_compare_means(size=6) +
+  	  labs(y="distance (bin)", x="") +
+  	  stat_compare_means(label.y = 0.98*max(all_bins[all_bins$p.adj < 0.05, ]$D), size = 4.5) +
+  	  scale_y_continuous(limits = c(0, 1.1*max(all_bins[all_bins$p.adj < 0.05, ]$D))) +
   	  scale_fill_manual(values=c(color1, color2))
   	
   	ggsave(file.path(pdir, paste0("comp_distance_", sample1, "_", sample2, "_", binsize, ".pdf")), 
   	       plot = comp_d, device = cairo_pdf, width = 8, height = 6)
 
-	saveRDS(comp_d, file = file.path(pdir, paste0("comp_distance_", sample1, "_", sample2, "_", binsize, ".rds")))
+	  saveRDS(comp_d, file = file.path(pdir, paste0("comp_distance_", sample1, "_", sample2, "_", binsize, ".rds")))
   }
   
-  # venn diagrams
+  # Venn diagrams
   
   pdir <- paste0(baseDir, "plots/HiCcompare/overlap")
   comp <- full_join(signif_alpha_beta, signif_alpha_STM,
-                    by=join_by(chr1, start1, start2),
-                    suffix = c(".alpha_beta", ".alpha_STM")) 
+                    by=join_by(chr1==chr1, start1==start1, start2==start2),
+                    suffix = c(".alpha_beta", ".alpha_STM"))
   
   comp <- comp %>% 
     mutate(
@@ -246,14 +251,14 @@ for (binsize in binsizes) {
   
     nb_size = 6
     label_size = 8
-
-    p_all <- ggplot(data=comp) +
+    p_all <- 
+    ggplot(data=comp) +
     geom_venn(aes(A = alpha_beta,
                   B = alpha_STM),
         text_size = nb_size,
 	      set_name_size = 0) +
     coord_fixed() +
-    labs(title="") +
+    labs(title="") + 
     theme_void(base_size=10) +
     annotate("text", x=-0.8, y=1.3, label="α vs β", size=label_size) +
     annotate("text", x=0.8, y=1.3, label="α vs STM", size=label_size)

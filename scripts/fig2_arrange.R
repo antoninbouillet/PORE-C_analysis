@@ -19,6 +19,10 @@ vSize = 1
 volcanoplotAB <- readRDS(file = file.path(ABdir, "volcanoplot_alpha_beta_500kb.rds"))
 volcanoplotASTM <- readRDS(file = file.path(ASTMdir, "volcanoplot_alpha_STM_500kb.rds"))
 
+dSize = 0.5
+distAB <- readRDS(file = file.path(ABdir, "comp_distance_alpha_beta_500kb.rds"))
+distASTM <- readRDS(file = file.path(ASTMdir, "comp_distance_alpha_STM_500kb.rds"))
+
 cSize = 1
 contactMapAB <- readRDS(file = file.path(ABdir, "map_zoom_HiCcompare_alpha_beta_500kb.rds"))
 contactMapASTM <- readRDS(file = file.path(ASTMdir, "map_zoom_HiCcompare_alpha_STM_500kb.rds"))
@@ -59,6 +63,9 @@ fig2 <- ggdraw() +
   
   draw_plot(volcanoplotAB,    x = 0.006, y = 0.75, width = 0.5, height = 0.24) +
   draw_plot(volcanoplotASTM, x = 0.239, y = 0.75, width = 0.5, height = 0.24) +
+  
+  draw_plot(distAB, x = 0.135, y = 0.865, width = 0.22, height = 0.11) +
+  draw_plot(distASTM, x = 0.360, y = 0.865, width = 0.22, height = 0.11) +
   
   draw_plot(contactMapAB,    x = 0.015, y = 0.50, width = 0.5, height = 0.24) +
   draw_plot(contactMapASTM, x = 0.238, y = 0.50, width = 0.5, height = 0.24) +
