@@ -34,3 +34,9 @@
 ## 13/03/26
 
 - ajout venn diagram
+
+# notes 02/06/26
+
+fig 1 : superposer chr / chr
+Overlap : étendre bins
+Zoom distance cvd avec résolution + faible -> comparaison avec downsampling

@@ -5,8 +5,9 @@ library(magick)
 rm(list = ls())
 
 baseDir <- "/home/anton/Bureau/PORE-C_repo/plots/"
-
+binsize <- "250kb"
 samples <- c("alpha", "beta", "STM")
+
 
 readPdf <- function(pdfPath, page = 1, density = 600) {
 	pdf <- image_read_pdf(pdfPath, page = page, density = density)
@@ -17,14 +18,14 @@ readPdf <- function(pdfPath, page = 1, density = 600) {
 # load contact vs distance plots
 for (sample in samples) {
 
-	cvd <- grid::rasterGrob(readPdf(paste0(baseDir, "contacts_distance/", sample, "/", sample, "_500kb_cvd.pdf")), interpolate = F)
+	cvd <- grid::rasterGrob(readPdf(paste0(baseDir, "contacts_distance/", sample, "/", sample, "_", binsize, "_cvd.pdf")), interpolate = F)
 	assign(paste0(sample, "_cvd"), cvd)
 }
 
 # load an example of a contact map on chr3 : contact maps alpha + significant bins + difference alpha / beta and alpha / STM
 
-mapChr3 <- grid::rasterGrob(readPdf(paste0(baseDir, "fanc_analysis/alpha/alpha_500kb_insulation.pdf"), page = 3), interpolate = F)
-mirrorChr3 <- grid::rasterGrob(readPdf(paste0(baseDir, "fanc_comparison/mirror_zoom_chr3_500kb.pdf")), interpolate = F)
+mapChr3 <- grid::rasterGrob(readPdf(paste0(baseDir, paste0("fanc_analysis/alpha/alpha_", binsize, "_insulation.pdf")), page = 3), interpolate = F)
+mirrorChr3 <- grid::rasterGrob(readPdf(paste0(baseDir, paste0("fanc_comparison/mirror_zoom_chr3_", binsize, ".pdf"))), interpolate = F)
 
 cvdY = 0.58
 cvdW = 0.33
@@ -41,5 +42,5 @@ fig1 <- ggdraw() +
   draw_plot_label("B", x = 0.01, y = 0.66, size = 80, hjust = 0) +
   draw_plot_label("C", x = 0.5, y = 0.66, size = 80, hjust = 0)
 
-ggsave2(file.path(baseDir, "fig1.pdf"),
+ggsave2(file.path(baseDir, paste0("fig1_", binsize, ".pdf")),
          plot = fig1, device = cairo_pdf, width = 45, height = 45)

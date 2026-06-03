@@ -10,7 +10,7 @@ library(Cairo)
 library(ggplot2)
 library(dplyr)
 
-binsize = "500kb"
+binsize = "250kb"
 baseDir <- "/home/anton/Bureau/PORE-C_repo/"
 rDir <- paste0(baseDir, "data/regions")
 

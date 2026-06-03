@@ -4,7 +4,7 @@ library(HiCcompare)
 library(dplyr)
 library(data.table)
 
-binsize <- "500kb"
+binsize <- "250kb"
 comparisons <- list(c("alpha", "beta"), c("alpha", "STM"))
 
 print(comparisons)

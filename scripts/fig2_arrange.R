@@ -5,35 +5,35 @@ library(ggplot2)
 rm(list=ls())
 
 # Figure 2 : volcanoplot -> contact map -> GO -> Venn diagram for alpha vs beta / alpha vs STM
-# at a 500kb resolution
 
 # load plots
 
 baseDir <- "/home/anton/Bureau/PORE-C_repo/plots/"
+binsize <- "250kb"
 pDir <- paste0(baseDir, "HiCcompare/")
 
-ABdir <- paste0(pDir, "alpha_beta/500kb_bins")
-ASTMdir <- paste0(pDir, "alpha_STM/500kb_bins")
+ABdir <- paste0(pDir, paste0("alpha_beta/", binsize, "_bins"))
+ASTMdir <- paste0(pDir, "alpha_STM/", binsize, "_bins")
 
 vSize = 1
-volcanoplotAB <- readRDS(file = file.path(ABdir, "volcanoplot_alpha_beta_500kb.rds"))
-volcanoplotASTM <- readRDS(file = file.path(ASTMdir, "volcanoplot_alpha_STM_500kb.rds"))
+volcanoplotAB <- readRDS(file = file.path(ABdir, paste0("volcanoplot_alpha_beta_", binsize, ".rds")))
+volcanoplotASTM <- readRDS(file = file.path(ASTMdir, paste0("volcanoplot_alpha_STM_", binsize, ".rds")))
 
 dSize = 0.5
-distAB <- readRDS(file = file.path(ABdir, "comp_distance_alpha_beta_500kb.rds"))
-distASTM <- readRDS(file = file.path(ASTMdir, "comp_distance_alpha_STM_500kb.rds"))
+distAB <- readRDS(file = file.path(ABdir, paste0("comp_distance_alpha_beta_", binsize, ".rds")))
+distASTM <- readRDS(file = file.path(ASTMdir, paste0("comp_distance_alpha_STM_", binsize, ".rds")))
 
 cSize = 1
-contactMapAB <- readRDS(file = file.path(ABdir, "map_zoom_HiCcompare_alpha_beta_500kb.rds"))
-contactMapASTM <- readRDS(file = file.path(ASTMdir, "map_zoom_HiCcompare_alpha_STM_500kb.rds"))
+contactMapAB <- readRDS(file = file.path(ABdir, paste0("map_zoom_HiCcompare_alpha_beta_", binsize, ".rds")))
+contactMapASTM <- readRDS(file = file.path(ASTMdir, paste0("map_zoom_HiCcompare_alpha_STM_", binsize, ".rds")))
 
 gSize = 1
-goAB <- readRDS(file = file.path(ABdir, "GO_terms_bins_500kb_alpha_beta_all.rds"))
-goASTM <- readRDS(file = file.path(ASTMdir, "GO_terms_bins_500kb_alpha_STM_all.rds"))
+goAB <- readRDS(file = file.path(ABdir, paste0("GO_terms_bins_", binsize, "_alpha_beta_all.rds")))
+goASTM <- readRDS(file = file.path(ASTMdir, paste0("GO_terms_bins_", binsize, "_alpha_STM_all.rds")))
 
 vennSize = 0.8
-vennAA <- readRDS(file = file.path(paste0(pDir, "overlap"), "Venn_alpha_alpha_500kb.rds"))
-vennBSTM <- readRDS(file = file.path(paste0(pDir, "overlap"), "Venn_beta_STM_500kb.rds"))
+vennAA <- readRDS(file = file.path(paste0(pDir, "overlap"), paste0("Venn_alpha_alpha_", binsize, ".rds")))
+vennBSTM <- readRDS(file = file.path(paste0(pDir, "overlap"), paste0("Venn_beta_STM_", binsize, ".rds")))
 
 scales <- c(vSize, vSize,
             cSize, cSize,
@@ -81,5 +81,5 @@ fig2 <- ggdraw() +
   draw_plot_label("C", x = 0.13, y = 0.49, size = 48, hjust = 0) +
   draw_plot_label("D", x = 0.13, y = 0.24, size = 48, hjust = 0)
 
-ggsave2(file.path(baseDir, "fig2.pdf"),
+ggsave2(file.path(baseDir, paste0("fig2_", binsize, ".pdf")),
          plot = fig2, device = cairo_pdf, width = 40, height = 25)
