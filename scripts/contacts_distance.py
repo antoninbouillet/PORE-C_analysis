@@ -11,6 +11,7 @@ import bioframe
 import cooler
 import cooltools
 from packaging import version
+from multiprocessing import Pool
 
 if version.parse(cooltools.__version__) < version.parse("0.5.2"):
     raise AssertionError(
@@ -34,6 +35,7 @@ cmDir = join(baseDir, "data/contact_maps/")
 samples = ["alpha", "beta", "STM"]
 
 binsizes = {"1Mb": 1e6, "500kb": 5e5, "250kb": 2.5e5, "100kb": 1e5}
+yMins = {"1Mb": 2e-2, "500kb": 1e-2, "250kb": 2e-3, "100kb": 2e-4}
 xlim = (0, 10e7)
 ylim = (1e-05, 7e-04)
 
@@ -61,6 +63,20 @@ def plotCvd(sample, binsize):
         label = sample
 
     clr = cooler.Cooler(join(cmDir, sample, "%s_%s.cool" % (sample, binsize)))
+
+    # create downsampled test data at 10% and 1% of reads
+    downsampling_fracs = [0.1, 0.01]
+    num_reads = {}
+    cvds_smoothed = {}
+
+    p = Pool(num_cpus)
+    for frac in downsampling_fracs:
+        fracClrPath = join(cmDir, sample, "%s_%s_downsample_%s.cool" % (sample, binsize, frac))
+        cooltools.sample(clr, out_clr_path=fracClrPath, frac=frac, nproc=num_cpus)
+        clr_downsampled = cooler.Cooler(fracClrPath)
+        cooler.balance_cooler(clr_downsampled, map=p.map, store=True, min_nnz=0)
+    p.close()
+    p.terminate()
 
     # smoothed interactions
 
@@ -101,6 +117,65 @@ def plotCvd(sample, binsize):
     cvd_merged = cvd_smooth_agg.drop_duplicates(subset=["dist"])[
         ["dist_bp", "balanced.avg.smoothed.agg"]
     ]
+
+    # create contact vs distance plots for dowsampled data (10% and 1% of reads)
+
+    cvds_smoothed[1.0] = cvd_smooth_agg.copy()
+    num_reads[1.0] = cvd_smooth_agg['count.sum'].sum().astype(int)
+
+    cvd_smooth_agg = cooltools.expected_cis(
+        clr=clr,
+        view_df=chr_viewframe,
+        clr_weight_name=None,
+        smooth=True,
+        aggregate_smoothed=True,
+        nproc=num_cpus
+    )
+
+    cvd_smooth_agg['count.avg.smoothed'].loc[cvd_smooth_agg['dist'] < 2] = np.nan
+    cvd_merged_down = cvd_smooth_agg.drop_duplicates(subset=['dist'])[['dist_bp', 'count.avg.smoothed.agg']]
+    der = np.gradient(np.log(cvd_merged_down['count.avg.smoothed.agg']),
+                      np.log(cvd_merged_down['dist_bp']))
+
+    cvds_smoothed[1.0] = cvd_smooth_agg.copy()
+    num_reads[1.0] = cvd_smooth_agg['count.sum'].sum().astype(int)
+
+    for frac in downsampling_fracs:
+        fracClrPath = join(cmDir, sample, "%s_%s_downsample_%s.cool" % (sample, binsize, frac))
+        clr_downsampled = cooler.Cooler(fracClrPath)
+        cvd_smooth_agg_downsampled = cooltools.expected_cis(
+            clr=clr_downsampled,
+            view_df=chr_viewframe,
+            clr_weight_name=None,
+            smooth=True,
+            aggregate_smoothed=True,
+            nproc=num_cpus
+        )
+        cvd_smooth_agg_downsampled['count.avg.smoothed'].loc[cvd_smooth_agg_downsampled['dist'] < 2] = np.nan
+        cvds_smoothed[frac] = cvd_smooth_agg_downsampled
+
+        cvd_merged_down = cvd_smooth_agg_downsampled.drop_duplicates(subset=['dist'])[['dist_bp', 'count.avg.smoothed.agg']]
+        num_reads[frac] = cvd_smooth_agg_downsampled['count.sum'].sum().astype(int)
+
+    f, ax = plt.subplots(1,1,figsize=(8, 8))
+
+    for frac in [1.0]+downsampling_fracs:
+        cvd_smooth_agg_downsampled = cvds_smoothed[frac]
+        cvd_smooth_agg_downsampled['count.avg.smoothed'].loc[cvd_smooth_agg_downsampled['dist'] < 2] = np.nan
+        ax.loglog(
+            cvd_smooth_agg_downsampled['dist_bp'],
+            cvd_smooth_agg_downsampled['count.avg.smoothed'],
+            label=f'{frac*100}%, {num_reads[frac]} reads')
+
+    ax.set(
+        xlabel='separation, bp',
+        ylabel='contact frequency')
+    ax.grid(lw=0.5)
+    # ax.title("%s %s , smoothed" % (label, binsize))
+    ax.legend()
+    ax.set_ylim(ymin=yMins[binsize])
+    downFname = "%s_%s_cvd_downsampled.pdf" % (sample, binsize)
+    plt.savefig(join(pDir, downFname), dpi=250, format="pdf")
 
     # Calculate derivative in log-log space
 
