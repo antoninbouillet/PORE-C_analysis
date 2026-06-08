@@ -1,0 +1,130 @@
+ 1. Is your current script correct?
+    
+  No — there are two distinct problems.
+  
+  Problem A: ntile() does not do what you think
+
+  tiled_alpha_beta <- all_bins_alpha_beta %>% group_by(chr1) %>% mutate(bins = ntile(start1, tileSize))
+
+  dplyr::ntile(start1, 10) splits each chromosome into exactly 10 buckets of equal row count (ranked by start1), and labels them 1..10. So:
+
+  - You always get 10 tiles per chromosome regardless of chromosome length or bin size.
+  - Each tile holds an equal number of significant bins, not an equal genomic width. A dense region and a sparse region get the same number of tiles, so the genomic size of tile 5
+  differs between chr1 groups and even between the two comparisons.
+  - This is not n adjacent bins count as overlapping. It's chop each chromosome into 10 quantile slices. Two intervals land in the same tile if they happen to fall in the same
+  rank-decile — which has nothing to do with being within n bins of each other.
+
+  A subtle consequence: because signif_tiled_alpha_beta and signif_tiled_alpha_STM are tiled independently after filtering, their bins boundaries don't even refer to the same genomic
+  coordinates. So your full_join(by = chr1, bins) is joining tiles that aren't spatially aligned. The overlap counts are essentially meaningless.
+
+  Problem B: BEDPE is 2D, but you only use one anchor
+
+  Your data is Hi-C interactions: each row is a pair of loci (chr1/start1 and start2, presumably chr2). Two interactions overlap only if both anchors overlap. Your tiling and join
+  use only start1, so two interactions sharing the left anchor but with completely different right anchors are counted as overlapping. That inflates overlap.
+
+  So the script is incorrect on both the n adjacent bins logic and the 2D nature of the data.
+
+  ---
+  2. Simpler / correct approaches
+
+  The honest constraint: within n adjacent bins is a band/proximity join, not an equality join. full_join on an equality key can never express it exactly, because proximity isn't an
+  equivalence relation (A near B, B near C doesn't mean A near C). Coarsening to a grid (start %/% (n*binsize)) approximates it but fails at grid boundaries (two adjacent bins
+  straddling a boundary won't match). So the clean solutions use real interval-overlap tools with a gap tolerance.
+
+  Option 1 — bedtools pairToPair (best fit for BEDPE)
+
+  pairToPair is purpose-built for BEDPE-vs-BEDPE overlap and has a -slop flag that pads coordinates before testing — exactly your extend the intervals idea. With -type both, both
+  anchors must overlap:
+
+  # slop = n * binsize in bp. e.g. n=2 adjacent bins at 1Mb => 2000000
+  pairToPair -a alpha_beta.signif.bedpe              -b alpha_STM.signif.bedpe              -type both              -slop 2000000              -is > overlap.bedpe          # -is also matches when strandless
+
+  Count the lines in overlap.bedpe for the intersection, and the input line counts for each set; those three numbers give you a two-set Venn directly. This respects both anchors and is
+  far simpler than the dplyr machinery.
+
+  Option 2 — Bioconductor InteractionSet (stay in R, fully correct)
+
+  This is the R-native Hi-C answer and integrates with your existing pipeline. GInteractions + findOverlaps(..., maxgap=) does the 2D, gap-tolerant overlap natively:
+
+  library(InteractionSet)
+
+  to_gi <- function(df, binbp) {
+    a1 <- GRanges(df, IRanges(df, width = binbp))
+    a2 <- GRanges(df, IRanges(df, width = binbp))   # use your real 2nd-anchor cols
+    GInteractions(a1, a2)
+  }
+
+  binbp <- 1e6          # actual bin size in bp for this binsize
+  n     <- 2            # tolerance in bins
+  gi_ab  <- to_gi(signif_alpha_beta, binbp)
+  gi_as  <- to_gi(signif_alpha_STM,  binbp)
+
+  # maxgap = n * binbp lets up to n adjacent bins count as overlapping, on BOTH anchors
+  hits <- findOverlaps(gi_ab, gi_as, maxgap = n * binbp, use.region = both)
+
+  n_ab_only <- length(gi_ab) - length(unique(queryHits(hits)))
+  n_as_only <- length(gi_as) - length(unique(subjectHits(hits)))
+  n_shared  <- length(unique(queryHits(hits)))   # ab-side count in the overlap
+
+  Feed those three counts into a Venn (e.g. ggvenn accepts a named list of counts, or use VennDiagram::draw.pairwise.venn). This is correct, handles boundaries properly, and removes
+  the brittle ntile/full_join logic entirely.
+    
+  Option 3 — if you genuinely only care about ONE anchor (1D)
+  
+  If your intent really is to compare single-anchor positions, then drop BEDPE and use plain bedtools:
+
+  # pad each interval by n*binsize on each side, then intersect
+  bedtools slop -i a.bed -g genome.txt -b 2000000 > a.pad.bed
+  bedtools intersect -a a.pad.bed -b b.pad.bed -u | wc -l
+
+  or in R replace ntile(start1, 10) with a fixed-width grid bin_id = start1 %/% (n*binbp) — but be aware of the boundary caveat above.
+  
+  ---
+  My recommendation
+
+  Since this is Hi-C interaction data, treat it as 2D. Option 2 (InteractionSet) keeps everything in your existing R script and is the most correct; Option 1 (pairToPair -slop) is the
+  simplest one-liner if you're happy exporting BEDPE files. Either replaces lines 242–294 wholesale.
+
+  One thing I should confirm to tailor the code exactly: does overlap need to match on both anchors (true Hi-C interaction overlap), or only on start1? And what is the real bin size in
+  bp for each binsize label (1Mb → 1e6, etc.)? If you tell me, I can rewrite the block for you.
+    
+✻ Brewed for 1m 27s
+  
+  /btw the data is stored elsewhere, I can add it if needed
+
+    
+    library(InteractionSet)
+  
+    mk_gi <- function(df, binsize_bp) {
+      a1 <- GRanges(df, IRanges(df, width = binsize_bp))
+      a2 <- GRanges(df, IRanges(df, width = binsize_bp))  # adjust if start2 has its own chr
+      GInteractions(a1, a2)
+    }
+
+    gi_ab  <- mk_gi(signif_alpha_beta, binsize_bp)
+    gi_stm <- mk_gi(signif_alpha_STM, binsize_bp)
+
+    # maxgap = n*binsize - 1 lets up to n adjacent bins count as overlapping, on BOTH anchors
+    hits <- findOverlaps(gi_ab, gi_stm, maxgap = n*binsize_bp - 1, use.region = both)
+
+    Then length(unique(queryHits)), length(unique(subjectHits)), and the non-overlapping remainders give your Venn sets, which you can feed to ggvenn/geom_venn as logical columns
+    exactly as you do now.
+
+    Option C — base-R / data.table fix if you want to avoid new deps
+
+    Compute integer bin indices instead of quantiles:
+
+    df <- df %/% binsize_bp
+    df <- df %/% binsize_bp
+
+    Then, for ±n tolerance, expand each A interaction to its (2n+1)×(2n+1) neighborhood of (b1,b2) cells (or use a data.table non-equi join on both anchors) and intersect with B. This
+    works but is more code than A or B.
+
+    ---
+    Recommendation: if you're comfortable shelling out, Option A (pairtopair -slop) is the least code and least error-prone. If you want to keep everything in the R pipeline and feed
+    geom_venn, Option B is the most principled because it respects the paired/2D nature of Hi-C interactions and gives you maxgap as an explicit adjacent bins knob.
+
+    One thing worth confirming in your data: whether start2 is always on the same chromosome as start1 (cis only) or whether there are trans interactions — that affects how you build
+    the second anchor's GRanges/BEDPE columns. If you share the BEDPE/all_bins schema I can tighten the snippets.
+
+

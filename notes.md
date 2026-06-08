@@ -40,3 +40,8 @@
 fig 1 : superposer chr / chr
 Overlap : étendre bins
 Zoom distance cvd avec résolution + faible -> comparaison avec downsampling
+
+## 05/06/26
+
+- ajout de l'analyse de downsampling pour cvd
+- tentative d'élargissement des bins pour diagrammes de Venn (pas sûr que ça marche..)

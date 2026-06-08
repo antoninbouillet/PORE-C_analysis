@@ -2,13 +2,20 @@ rm(list = ls())
 
 library(data.table)
 library(dplyr)
+library(tidyr)
 library(ggplot2)
 library(ggpubr)
 library(ggnewscale)
 library(ggvenn)
+library(InteractionSet)
 
 binsizes <- c("1Mb", "500kb", "250kb")
 comparisons <- list(c("alpha", "beta"), c("alpha", "STM"))
+
+# base distance (in bins) to define overlapping bins in the Venn diagrams
+# this distance is adjusted with the resolution, to search for overlap in the same intervals
+baseAdjacentBins <- 3
+
 color1 <- "#5948d9"
 colorBeta <- "#48D959"
 colorSTM <- "#D95948"
@@ -25,12 +32,18 @@ for (binsize in binsizes) {
   if (binsize == "1Mb") {
     pixelsize <- 0.47
     zoomPixelsize <- 4.7
+    binInt = 1e6
+    adjacentBins = baseAdjacentBins
   } else if (binsize == "500kb") {
     pixelsize <- 0.09
     zoomPixelsize <- 2
+    binInt = 5e5
+    adjacentBins = baseAdjacentBins * 2
   } else if (binsize == "250kb") {
     pixelsize <- 0.01
     zoomPixelsize <- 0.75
+    binInt = 2.5e5
+    adjacentBins = baseAdjacentBins * 4
   }
   
   for (comparison in comparisons) {
@@ -67,10 +80,13 @@ for (binsize in binsizes) {
   
   	all_bins$status <- factor(all_bins$status, levels = levels)
   	
-  	# save bins with significant interaction differences to check overlap between comparisons
+  	# save bins with significant interaction differences to check overlap between comparisons (+ all bins)
   	signif <- all_bins[all_bins$is_signif == TRUE, ]
   	signifName <- paste0("signif_", sample1, "_", sample2)
 	  assign(signifName, signif)
+	allName <- paste0("all_bins_", sample1, "_", sample2)
+	  assign(allName, all_bins)
+
 
   	volcanoplot <- ggplot() + 
   	  geom_point(data=signif,
@@ -227,52 +243,71 @@ for (binsize in binsizes) {
   
   # Venn diagrams
   
-  pdir <- paste0(baseDir, "plots/HiCcompare/overlap")
-  comp <- full_join(signif_alpha_beta, signif_alpha_STM,
-                    by=join_by(chr1==chr1, start1==start1, start2==start2),
-                    suffix = c(".alpha_beta", ".alpha_STM"))
-  
-  comp <- comp %>% 
-    mutate(
-
-      # total overlap
-      alpha_beta = !is.na(status.alpha_beta),
-      alpha_STM = !is.na(status.alpha_STM),
-
-      # alpha +  
-      alpha_beta_alpha = !is.na(status.alpha_beta) & status.alpha_beta == "α+",
-      alpha_STM_alpha  = !is.na(status.alpha_STM) & status.alpha_STM == "α+",
+    GiConv <- function(data) {
+      # build a GInteractions object from the two anchors (start1/end1 & start2/end2)
+      c1 <- GRanges(seqnames = data$chr1, ranges = IRanges(start = data$start1, end = data$end1))
+      c2 <- GRanges(seqnames = data$chr2, ranges = IRanges(start = data$start2, end = data$end2))
+      GInteractions(c1, c2)
+    }
+    
+    findOverlap <- function(bedpeA, bedpeB, adjacentBins, binInt) {
+      # returns a dataframe to be used by geom_venn from two IRange objects
       
-      # beta + / STM + 
-      alpha_beta_beta = !is.na(status.alpha_beta) & status.alpha_beta == "β+",
-      alpha_STM_STM   = !is.na(status.alpha_STM) & status.alpha_STM == "STM+",
-
-    )
-  
+      giA <- GiConv(bedpeA)
+      giB <- GiConv(bedpeB)
+      
+      hits <- findOverlaps(giA, giB,
+                           maxgap = adjacentBins * binInt, use.region = "both")
+      n_A_only <- length(giA) - length(unique(queryHits(hits)))
+      n_B_only <- length(giB)  - length(unique(subjectHits(hits)))
+      n_shared  <- length(unique(queryHits(hits)))
+      
+      grp <- rep(c("A", "B", "shared"), times = c(n_A_only, n_B_only, n_shared))
+      
+      data.frame(A = grp %in% c("A", "shared"),
+                 B = grp %in% c("B", "shared"))
+    }
+    
+    # overlap between significant bins between alpha vs beta / alpha vs STM
+    comp <- findOverlap(signif_alpha_beta, signif_alpha_STM, adjacentBins, binInt)
+    
+    # overlap between significant bins that have more contacts in alpha (between alpha vs beta / alpha vs STM)
+    
+    comp_alpha_alpha <- findOverlap(signif_alpha_beta[signif_alpha_beta$status == "α+", ],
+                                    signif_alpha_STM[signif_alpha_STM$status == "α+", ],
+                                    adjacentBins, binInt)
+    
+    # overlap between significant bins that have more contact in beta / STM (still between alpha vs beta / alpha vs STM))
+    
+    comp_beta_STM <- findOverlap(signif_alpha_beta[signif_alpha_beta$status == "β+", ],
+                                 signif_alpha_STM[signif_alpha_STM$status == "STM+", ],
+                                 adjacentBins, binInt)
+    
+    pdir <- paste0(baseDir, "plots/HiCcompare/overlap")
+    
     nb_size = 6
     label_size = 8
-    p_all <- 
+    p_all <-
     ggplot(data=comp) +
-    geom_venn(aes(A = alpha_beta,
-                  B = alpha_STM),
+    geom_venn(aes(A = A,
+                  B = B),
         text_size = nb_size,
 	      set_name_size = 0) +
     coord_fixed() +
-    labs(title="") + 
+    labs(title="") +
     theme_void(base_size=10) +
     annotate("text", x=-0.8, y=1.3, label="α vs β", size=label_size) +
     annotate("text", x=0.8, y=1.3, label="α vs STM", size=label_size)
 
-  
+
   ggsave(file.path(pdir, paste0("Venn_total", binsize, ".pdf")),
          plot = p_all, device = cairo_pdf, width = 8, height = 6)
 
   saveRDS(p_all, file = file.path(pdir, paste0("Venn_total", binsize, ".rds")))
 
-  p_alpha <- ggplot(data=comp[comp$status.alpha_beta == "α+" |
-                                comp$status.alpha_STM == "α+", ]) + 
-    geom_venn(aes(A = alpha_beta_alpha,
-                  B = alpha_STM_alpha),
+  p_alpha <- ggplot(data=comp_alpha_alpha) +
+    geom_venn(aes(A = A,
+                  B = B),
 	      fill_color = c(color1, color1),
 	      text_size = nb_size,
 	      set_name_size = 0)+
@@ -280,16 +315,15 @@ for (binsize in binsizes) {
     theme_void(base_size=10) +
     annotate("text", x=-0.9, y=1.3, label="α vs β (α+)", size=label_size) +
     annotate("text", x=0.9, y=1.3, label="α vs STM (α+)", size=label_size)
-  
+
   ggsave(file.path(pdir, paste0("Venn_alpha_alpha_", binsize, ".pdf")),
          plot = p_alpha, device = cairo_pdf, width = 8, height = 6)
 
   saveRDS(p_alpha, file = file.path(pdir, paste0("Venn_alpha_alpha_", binsize, ".rds")))
-  
-  p_other <- ggplot(data=comp[comp$status.alpha_beta == "β+" |
-                                comp$status.alpha_STM == "STM+", ]) + 
-    geom_venn(aes(A = alpha_beta_beta, 
-                  B = alpha_STM_STM),
+
+  p_other <- ggplot(data=comp_beta_STM) +
+    geom_venn(aes(A = A,
+                  B = B),
               fill_color = c(colorBeta, colorSTM),
 	      text_size = nb_size,
 	      set_name_size = 0) +
@@ -298,9 +332,10 @@ for (binsize in binsizes) {
     theme(plot.title = element_text(size = 10)) +
     annotate("text", x=-0.9, y=1.3, label="α vs β (β+)", size=label_size) +
     annotate("text", x=0.9, y=1.3, label="α vs STM (STM+)", size=label_size)
-  
+
   ggsave(file.path(pdir, paste0("Venn_beta_STM_", binsize, ".pdf")),
          plot = p_other, device = cairo_pdf, width = 8, height = 6)
 
   saveRDS(p_other, file = file.path(pdir, paste0("Venn_beta_STM_", binsize, ".rds")))
+
 }
