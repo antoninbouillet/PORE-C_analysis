@@ -9,7 +9,7 @@ rm(list=ls())
 # load plots
 
 baseDir <- "/home/anton/Bureau/PORE-C_repo/plots/"
-binsize <- "250kb"
+binsize <- "500kb"
 pDir <- paste0(baseDir, "HiCcompare/")
 
 ABdir <- paste0(pDir, paste0("alpha_beta/", binsize, "_bins"))
