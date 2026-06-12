@@ -5,6 +5,8 @@ from os.path import join
 import subprocess
 import matplotlib.pyplot as plt
 from matplotlib import colors
+import matplotlib.patches as mpatches
+from matplotlib.ticker import NullLocator
 import numpy as np
 import pandas as pd
 import bioframe
@@ -19,9 +21,6 @@ if version.parse(cooltools.__version__) < version.parse("0.5.2"):
     )
 warnings.filterwarnings("ignore")
 
-# Analyse des cartes de contact : fréquence de contact en fonction de la distance
-# Source https://cooltools.readthedocs.io/en/latest/notebooks/contacts_vs_distance.html
-
 # count cpus
 num_cpus = os.getenv("SLURM_CPUS_PER_TASK")
 if not num_cpus:
@@ -33,6 +32,11 @@ baseDir = "/home/anton/Bureau/PORE-C_repo"
 cmDir = join(baseDir, "data/contact_maps/")
 samplesToColor = {"alpha": "#5948d9", "beta": "#48D959", "STM": "#D95948"}
 binsizes = {"1Mb": 1e6, "500kb": 5e5, "250kb": 2.5e5, "100kb": 1e5}
+
+colorLegend = [
+    mpatches.Patch(facecolor=col, alpha=0.7, label=name)
+    for name, col in samplesToColor.items()
+]
 
 pDir = join(baseDir, "plots/contacts_distance")
 
@@ -51,9 +55,9 @@ for binsize in binsizes.keys():
 
     for region in chr_viewframe["name"]:
 
-        fig, ax = plt.subplots(figsize=(10, 6))
+        fig, axs = plt.subplots(ncols=num_bins, figsize=(10, 6))
 
-        for sample in samplesToColor.keys():
+        for sampleIdx, sample in enumerate(samplesToColor.keys()):
 
             clr = cooler.Cooler(join(cmDir, sample, "%s_%s.cool" % (sample, binsize)))
 
@@ -79,6 +83,13 @@ for binsize in binsizes.keys():
             min_dist = dist.min()
             max_dist = dist.max()
 
+            if sampleIdx == 0:
+                min_val = val.min()
+                max_val = val.max()
+            else:
+                min_val = min(min_val, val.min())
+                max_val = max(max_val, val.max())
+
             # Create log-spaced edges
             bin_edges = np.logspace(np.log10(min_dist), np.log10(max_dist), num_bins + 1)
 
@@ -95,27 +106,62 @@ for binsize in binsizes.keys():
             groups = [g for g in groups if len(g) > 0]
             positions = bin_centers[: len(groups)]
 
-            bp = ax.boxplot(
+            # plot all bins whithin the same figure
+            """
+            bp = axs[b].boxplot(
                 groups,
                 positions=positions,
                 widths=widths,
                 patch_artist=True,
                 showfliers=False,
-            )
+                )
+            """
 
-            for patch in bp["boxes"]:
-                patch.set_facecolor(samplesToColor[sample])
-                patch.set_alpha(0.7)
+            # make subplots for each bin
+            for b in range(num_bins):
 
-        ax.set_xscale("log")
-        ax.set_yscale("log")
+                filVals = val[bin_idx == b]
 
-        ax.set_xlabel("Separation, bp")
-        ax.set_ylabel("IC contact frequency")
-        ax.set_title(f"{binsize} - {region}, ({num_bins} bins)")
-        ax.grid(lw=0.5, which="both")
+                bp = axs[b].boxplot(
+                    filVals,
+                    positions=[sampleIdx],
+                    widths=[0.5],
+                    patch_artist=True,
+                    showfliers=False,
+                    )
+
+                axs[b].set_yscale("log")
+
+                if b > 0:
+                    axs[b].yaxis.set_major_locator(NullLocator())
+                    axs[b].yaxis.set_minor_locator(NullLocator())
+                else:
+                    axs[b].set_ylabel("Contact Frequency")
+
+                if b == abs(num_bins / 2) - 1:
+                    axs[b].set_title(f"{binsize} - {region}, ({num_bins} bins)")
+
+                axs[b].set_xticks([])
+                axs[b].set_xlabel(f" bin {b}")
+
+                for patch in bp["boxes"]:
+                    patch.set_facecolor(samplesToColor[sample])
+                    patch.set_alpha(0.7)
+
+            for ax in axs:
+                ax.set_xlim(-0.5, 2.5)
+                ax.set_ylim(min_val, max_val)
 
         plt.tight_layout()
+
+        fig.legend(
+            handles=colorLegend,
+            loc="center right",
+            bbox_to_anchor=(0.99, 0.85),
+            frameon=True,
+            fontsize='small'
+        )
+
         pFname = "cvd_boxplot_%s_%s.pdf" % (binsize, region)
         plt.savefig(join(pDir, pFname), dpi=250, bbox_inches="tight", format="pdf")
 

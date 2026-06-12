@@ -47,6 +47,7 @@ Zoom distance cvd avec résolution + faible -> comparaison avec downsampling
 - modification du calcul de l'overlap pour diagrammes de Venn : utilisation du package dédié InteractionSet (https://www.bioconductor.org/packages/release/bioc/vignettes/InteractionSet/inst/doc/interactions.html)
 - ajout des boxplots contact vs distance : pour chaque chromosome, séparation en 10 bins -> comparaison alpha / beta / STM
 
-- faires comparaisons 2 à 2 puis tests stats ? + normaliser par rapport au nombre de reads (i.e, ramener les échantillons au même nombre de reads)
+- faire comparaisons 2 à 2 puis tests stats ? + normaliser par rapport au nombre de reads (i.e, ramener les échantillons au même nombre de reads)
+- faire un panel / bin -> boxplots en position = dodge
 
 - éventuellement : Supprimer le bruit de fonc en ne conservant que les régions significatives aux trois résolutions ?
