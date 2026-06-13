@@ -50,4 +50,11 @@ Zoom distance cvd avec résolution + faible -> comparaison avec downsampling
 - faire comparaisons 2 à 2 puis tests stats ? + normaliser par rapport au nombre de reads (i.e, ramener les échantillons au même nombre de reads)
 - faire un panel / bin -> boxplots en position = dodge
 
-- éventuellement : Supprimer le bruit de fonc en ne conservant que les régions significatives aux trois résolutions ?
+- éventuellement : Supprimer le bruit de fond en ne conservant que les régions significatives aux trois résolutions ?
+
+## 13/05/26
+
+- ajout des boxplots -> fréquence des conctacts / bin (comparaison entre samples). 10 bins / chrom
+- normalisation des cartes de contacts (pour boxplots uniquement) à un nombre fixe de contacts
+    - non normalisé si pas assez de contacts ? (~ 50k semble raisonnable) -> compter contacts à toutes les résolutions
+

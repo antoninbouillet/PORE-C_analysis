@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from matplotlib import colors
 import matplotlib.patches as mpatches
 from matplotlib.ticker import NullLocator
+from multiprocessing import Pool
 import numpy as np
 import pandas as pd
 import bioframe
@@ -46,12 +47,28 @@ chromsizes = pd.read_csv(
 chr_viewframe = pd.read_csv(join(baseDir, "data/regions/chr_viewframe.bed"), sep="\t")
 bioframe.core.checks.is_viewframe(chr_viewframe)
 
+# number of bins per chromosome (1 boxplot per bin)
 num_bins = 10
-binsize = "500kb"
+# number of contacts to sample from each condition
+fixedCount = 5e4
 
 # bin distances and compare the interaction frequency between contitions, per chromosome
 
 for binsize in binsizes.keys():
+
+    # first, dowsample to the same number of contacts per sample
+    # note : can also be sampled to the same number of cis contacts (cis_count)
+    for sample in samplesToColor.keys():
+
+        clr = cooler.Cooler(join(cmDir, sample, "%s_%s.cool" % (sample, binsize)))
+
+        p = Pool(num_cpus)
+        normClrPath = join(cmDir, sample, "%s_%s_fixed.cool" % (sample, binsize))
+        cooltools.sample(clr, out_clr_path=normClrPath, count=fixedCount, exact=True, nproc=num_cpus)
+        clr_fixed = cooler.Cooler(normClrPath)
+        cooler.balance_cooler(clr_fixed, map=p.map, store=True, min_nnz=0)
+        p.close()
+        p.terminate()
 
     for region in chr_viewframe["name"]:
 
@@ -59,7 +76,7 @@ for binsize in binsizes.keys():
 
         for sampleIdx, sample in enumerate(samplesToColor.keys()):
 
-            clr = cooler.Cooler(join(cmDir, sample, "%s_%s.cool" % (sample, binsize)))
+            clr = cooler.Cooler(join(cmDir, sample, "%s_%s_fixed.cool" % (sample, binsize)))
 
             cvd_smooth_agg = cooltools.expected_cis(
                 clr=clr,
@@ -139,7 +156,7 @@ for binsize in binsizes.keys():
                     axs[b].set_ylabel("Contact Frequency")
 
                 if b == abs(num_bins / 2) - 1:
-                    axs[b].set_title(f"{binsize} - {region}, ({num_bins} bins)")
+                    axs[b].set_title(f"{binsize} - {region}, ({num_bins} bins) - {int(fixedCount * 0.001)}k contacts per sample")
 
                 axs[b].set_xticks([])
                 axs[b].set_xlabel(f" bin {b}")
@@ -150,7 +167,7 @@ for binsize in binsizes.keys():
 
             for ax in axs:
                 ax.set_xlim(-0.5, 2.5)
-                ax.set_ylim(min_val, max_val)
+                ax.set_ylim(min_val * 0.9, max_val * 1.1)
 
         plt.tight_layout()
 

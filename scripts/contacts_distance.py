@@ -65,6 +65,7 @@ def plotCvd(sample, binsize):
     clr = cooler.Cooler(join(cmDir, sample, "%s_%s.cool" % (sample, binsize)))
 
     # create downsampled test data at 10% and 1% of reads
+
     downsampling_fracs = [0.1, 0.01]
     num_reads = {}
     cvds_smoothed = {}
@@ -75,6 +76,15 @@ def plotCvd(sample, binsize):
         cooltools.sample(clr, out_clr_path=fracClrPath, frac=frac, nproc=num_cpus)
         clr_downsampled = cooler.Cooler(fracClrPath)
         cooler.balance_cooler(clr_downsampled, map=p.map, store=True, min_nnz=0)
+    p.close()
+    p.terminate()
+
+    # also, dowsample to the same number of reads per sample (150k ~ number of reads in STM 1Mb)
+    p = Pool(num_cpus)
+    normClrPath = join(cmDir, sample, "%s_%s_fixed.cool" % (sample, binsize))
+    cooltools.sample(clr, out_clr_path=normClrPath, count=50000, nproc=num_cpus)
+    clr_fixed = cooler.Cooler(normClrPath)
+    cooler.balance_cooler(clr_fixed, map=p.map, store=True, min_nnz=0)
     p.close()
     p.terminate()
 
