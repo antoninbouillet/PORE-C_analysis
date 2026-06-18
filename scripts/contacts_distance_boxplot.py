@@ -36,7 +36,7 @@ binsizes = {"1Mb": 1e6, "500kb": 5e5, "250kb": 2.5e5, "100kb": 1e5}
 
 colorLegend = [
     mpatches.Patch(facecolor=col, alpha=0.7, label=name)
-    for name, col in samplesToColor.items()
+    for name, col in [("α", "#5948d9"), ("β", "#48D959"), ("STM", "#D95948")]
 ]
 
 pDir = join(baseDir, "plots/contacts_distance")
@@ -49,8 +49,15 @@ bioframe.core.checks.is_viewframe(chr_viewframe)
 
 # number of bins per chromosome (1 boxplot per bin)
 num_bins = 10
+
 # number of contacts to sample from each condition
-fixedCount = 5e4
+
+# big problem : since we need to downsample the data to a very low number of reads,
+# most of the differences we see comes from the randomness of the sampling!
+# but if this value is increased too much, it might exceed the total number of counts
+# in the condition with the lowest sequencnig depth (STM)
+
+fixedCount = 2.5e5
 
 # bin distances and compare the interaction frequency between contitions, per chromosome
 
@@ -91,6 +98,7 @@ for binsize in binsizes.keys():
             mask = cvd_smooth_agg["region1"] == region
             dist = cvd_smooth_agg.loc[mask, "dist_bp"].values
             val = cvd_smooth_agg.loc[mask, "balanced.avg.smoothed"].values
+            count = cvd_smooth_agg['count.sum'].sum().astype(int)
 
             # Remove NaNs/zero
             valid = ~np.isnan(dist) & ~np.isnan(val) & (val > 0)
@@ -103,9 +111,11 @@ for binsize in binsizes.keys():
             if sampleIdx == 0:
                 min_val = val.min()
                 max_val = val.max()
+                max_count = count.max()
             else:
                 min_val = min(min_val, val.min())
                 max_val = max(max_val, val.max())
+                max_count = max(max_count, count.max())
 
             # Create log-spaced edges
             bin_edges = np.logspace(np.log10(min_dist), np.log10(max_dist), num_bins + 1)
@@ -168,6 +178,8 @@ for binsize in binsizes.keys():
             for ax in axs:
                 ax.set_xlim(-0.5, 2.5)
                 ax.set_ylim(min_val * 0.9, max_val * 1.1)
+
+            print(f"Maximum number of reads in {sample} : {max_count}")
 
         plt.tight_layout()
 
