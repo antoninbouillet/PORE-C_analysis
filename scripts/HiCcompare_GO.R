@@ -10,7 +10,7 @@ library(Cairo)
 library(ggplot2)
 library(dplyr)
 
-binsize = "250kb"
+binsize = "1Mb"
 baseDir <- "/home/anton/Bureau/PORE-C_repo/"
 rDir <- paste0(baseDir, "data/regions")
 
@@ -72,7 +72,7 @@ for (comparison in comparisons) {
 	  TERM2NAME = gene_go_mapping %>% select(GO_ID, ontology.name))
 
 	plotAll <- dotplot(liste_genes_enrich) +
-	  theme_bw(base_size=14, base_rect_size=1) +
+	  theme_bw(base_size=16, base_rect_size=1) +
 	  theme(panel.grid=element_blank(), 
 	        panel.border = element_rect(color="black"),
 	        axis.ticks = element_line(color="black"),
@@ -106,7 +106,7 @@ for (comparison in comparisons) {
 	  TERM2NAME = gene_go_mapping %>% select(GO_ID, ontology.name))
 
 	plotS1 <- dotplot(liste_genes_enrich_1) +
-	  theme_bw(base_size=14, base_rect_size=1) +
+	  theme_bw(base_size=16, base_rect_size=1) +
 	  theme(panel.grid=element_blank(),
 	        panel.border = element_rect(color="black"),
 	        axis.ticks = element_line(color="black"),
@@ -137,7 +137,7 @@ for (comparison in comparisons) {
 	  TERM2NAME = gene_go_mapping %>% select(GO_ID, ontology.name))
 
 	plotS2 <- dotplot(liste_genes_enrich_2) +
-	  theme_bw(base_size=14, base_rect_size=1) +
+	  theme_bw(base_size=16, base_rect_size=1) +
 	  theme(panel.grid=element_blank(),
 	        panel.border = element_rect(color="black"),
 	        axis.ticks = element_line(color="black"),

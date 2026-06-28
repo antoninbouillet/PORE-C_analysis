@@ -58,3 +58,13 @@ Zoom distance cvd avec résolution + faible -> comparaison avec downsampling
 - normalisation des cartes de contacts (pour boxplots uniquement) à un nombre fixe de contacts
     - non normalisé si pas assez de contacts ? (~ 50k semble raisonnable) -> compter contacts à toutes les résolutions
 
+## réunion 24/06/26
+
+- afficher bin cvd en dégradés de gris (avec pointillés reliant le 1er bin aux échantillons / boxplot) DONE
+
+- ajouter nb contacts signifs  dans volcanoplot) DONE
+- code couleur (bleu clair vs bleu foncé / cleu clair vs jaune)
+
+- sur fig2 B : schéma chromosome 3 -> zoom région
+- retirer Venn fig2 
+- STM -> alpha+ STM

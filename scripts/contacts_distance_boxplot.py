@@ -4,7 +4,6 @@ import os
 from os.path import join
 import subprocess
 import matplotlib.pyplot as plt
-from matplotlib import colors
 import matplotlib.patches as mpatches
 from matplotlib.ticker import NullLocator
 from multiprocessing import Pool
@@ -31,13 +30,27 @@ num_cpus = int(num_cpus)
 # import des fichiers
 baseDir = "/home/anton/Bureau/PORE-C_repo"
 cmDir = join(baseDir, "data/contact_maps/")
-samplesToColor = {"alpha": "#5948d9", "beta": "#48D959", "STM": "#D95948"}
+
+# old colors
+# alpha : #5948d9
+# beta : #48D959
+# STM : #D95948
+
+# new colors
+# alpha : #6BB0ED
+# beta : #193D8A
+# STM : #EDD472
+
+samplesToColor = {"alpha": "#6BB0ED", "beta": "#193D8A", "STM": "#EDD472"}
 binsizes = {"1Mb": 1e6, "500kb": 5e5, "250kb": 2.5e5, "100kb": 1e5}
 
 colorLegend = [
     mpatches.Patch(facecolor=col, alpha=0.7, label=name)
-    for name, col in [("α", "#5948d9"), ("β", "#48D959"), ("STM", "#D95948")]
+    for name, col in [("α", samplesToColor["alpha"]), ("β", samplesToColor["beta"]), ("STM", samplesToColor["STM"])]
 ]
+
+nameToChr = {"chr1": "NC_047559.1", "chr2": "NC_047560.1",  "chr3": "NC_047561.1", "chr4": "NC_047562.1", "chr5": "NC_047563.1",
+             "chr6": "NC_047564.1", "chr7": "NC_047565.1",  "chr8": "NC_047566.1", "chr9": "NC_047567.1", "chr10": "NC_047568.1"}
 
 pDir = join(baseDir, "plots/contacts_distance")
 
@@ -52,151 +65,156 @@ num_bins = 10
 
 # number of contacts to sample from each condition
 
-# big problem : since we need to downsample the data to a very low number of reads,
-# most of the differences we see comes from the randomness of the sampling!
-# but if this value is increased too much, it might exceed the total number of counts
-# in the condition with the lowest sequencnig depth (STM)
-
-fixedCount = 2.5e5
+fixedCount = 1.5e5
 
 # bin distances and compare the interaction frequency between contitions, per chromosome
 
-for binsize in binsizes.keys():
+# run 3 times to get an idea of the variability due to sampling
+for i in range(1, 4):
+    for binsize in binsizes.keys():
 
-    # first, dowsample to the same number of contacts per sample
-    # note : can also be sampled to the same number of cis contacts (cis_count)
-    for sample in samplesToColor.keys():
+        # first, dowsample to the same number of contacts per sample (cis + trans)
+        # note : can also be sampled to the same number of cis contacts (cis_count)
 
-        clr = cooler.Cooler(join(cmDir, sample, "%s_%s.cool" % (sample, binsize)))
+        for sample in samplesToColor.keys():
 
-        p = Pool(num_cpus)
-        normClrPath = join(cmDir, sample, "%s_%s_fixed.cool" % (sample, binsize))
-        cooltools.sample(clr, out_clr_path=normClrPath, count=fixedCount, exact=True, nproc=num_cpus)
-        clr_fixed = cooler.Cooler(normClrPath)
-        cooler.balance_cooler(clr_fixed, map=p.map, store=True, min_nnz=0)
-        p.close()
-        p.terminate()
+            clr = cooler.Cooler(join(cmDir, sample, "%s_%s.cool" % (sample, binsize)))
 
-    for region in chr_viewframe["name"]:
+            p = Pool(num_cpus)
+            normClrPath = join(cmDir, sample, "%s_%s_fixed.cool" % (sample, binsize))
+            cooltools.sample(clr, out_clr_path=normClrPath, cis_count=fixedCount, exact=True, nproc=num_cpus)
+            clr_fixed = cooler.Cooler(normClrPath)
+            cooler.balance_cooler(clr_fixed, map=p.map, store=True, min_nnz=0)
+            p.close()
+            p.terminate()
 
-        fig, axs = plt.subplots(ncols=num_bins, figsize=(10, 6))
+        for region in chr_viewframe["name"]:
 
-        for sampleIdx, sample in enumerate(samplesToColor.keys()):
+            fig, axs = plt.subplots(ncols=num_bins, figsize=(10, 6))
 
-            clr = cooler.Cooler(join(cmDir, sample, "%s_%s_fixed.cool" % (sample, binsize)))
+            chrName = nameToChr[region]
 
-            cvd_smooth_agg = cooltools.expected_cis(
-                clr=clr,
-                view_df=chr_viewframe,
-                smooth=True,
-                aggregate_smoothed=True,
-                smooth_sigma=0.1,
-                nproc=num_cpus,
-            )
+            for sampleIdx, sample in enumerate(samplesToColor.keys()):
 
-            cvd_smooth_agg.loc[cvd_smooth_agg["dist"] < 2, "balanced.avg.smoothed"] = np.nan
-            mask = cvd_smooth_agg["region1"] == region
-            dist = cvd_smooth_agg.loc[mask, "dist_bp"].values
-            val = cvd_smooth_agg.loc[mask, "balanced.avg.smoothed"].values
-            count = cvd_smooth_agg['count.sum'].sum().astype(int)
+                clr = cooler.Cooler(join(cmDir, sample, "%s_%s_fixed.cool" % (sample, binsize)))
 
-            # Remove NaNs/zero
-            valid = ~np.isnan(dist) & ~np.isnan(val) & (val > 0)
-            dist = dist[valid]
-            val = val[valid]
-
-            min_dist = dist.min()
-            max_dist = dist.max()
-
-            if sampleIdx == 0:
-                min_val = val.min()
-                max_val = val.max()
-                max_count = count.max()
-            else:
-                min_val = min(min_val, val.min())
-                max_val = max(max_val, val.max())
-                max_count = max(max_count, count.max())
-
-            # Create log-spaced edges
-            bin_edges = np.logspace(np.log10(min_dist), np.log10(max_dist), num_bins + 1)
-
-            # Centers (geometric mean of edges)
-            bin_centers = np.sqrt(bin_edges[:-1] * bin_edges[1:])
-            widths = 0.4 * bin_centers
-
-            # Assign to bins
-            bin_idx = np.digitize(dist, bin_edges) - 1
-            bin_idx = np.clip(bin_idx, 0, len(bin_centers) - 1)
-
-            # Group values
-            groups = [val[bin_idx == i] for i in range(len(bin_centers))]
-            groups = [g for g in groups if len(g) > 0]
-            positions = bin_centers[: len(groups)]
-
-            # plot all bins whithin the same figure
-            """
-            bp = axs[b].boxplot(
-                groups,
-                positions=positions,
-                widths=widths,
-                patch_artist=True,
-                showfliers=False,
+                cvd_smooth_agg = cooltools.expected_cis(
+                    clr=clr,
+                    view_df=chr_viewframe,
+                    smooth=True,
+                    aggregate_smoothed=True,
+                    smooth_sigma=0.1,
+                    nproc=num_cpus,
                 )
-            """
 
-            # make subplots for each bin
-            for b in range(num_bins):
+                cvd_smooth_agg.loc[cvd_smooth_agg["dist"] < 2, "balanced.avg.smoothed"] = np.nan
+                mask = cvd_smooth_agg["region1"] == region
+                dist = cvd_smooth_agg.loc[mask, "dist_bp"].values
+                val = cvd_smooth_agg.loc[mask, "balanced.avg.smoothed"].values
+                count = cvd_smooth_agg['count.sum'].sum().astype(int)
 
-                filVals = val[bin_idx == b]
+                # Remove NaNs/zero
+                valid = ~np.isnan(dist) & ~np.isnan(val) & (val > 0)
+                dist = dist[valid]
+                val = val[valid]
 
+                min_dist = dist.min()
+                max_dist = dist.max()
+
+                if sampleIdx == 0:
+                    min_val = val.min()
+                    max_val = val.max()
+                    max_count = count.max()
+                else:
+                    min_val = min(min_val, val.min())
+                    max_val = max(max_val, val.max())
+                    max_count = max(max_count, count.max())
+
+                # Create log-spaced edges
+                bin_edges = np.logspace(np.log10(min_dist), np.log10(max_dist), num_bins + 1)
+
+                # Centers (geometric mean of edges)
+                bin_centers = np.sqrt(bin_edges[:-1] * bin_edges[1:])
+                widths = 0.4 * bin_centers
+
+                # Assign to bins
+                bin_idx = np.digitize(dist, bin_edges) - 1
+                bin_idx = np.clip(bin_idx, 0, len(bin_centers) - 1)
+
+                # Group values
+                groups = [val[bin_idx == i] for i in range(len(bin_centers))]
+                groups = [g for g in groups if len(g) > 0]
+                positions = bin_centers[: len(groups)]
+
+                # plot all bins whithin the same figure
+                """
                 bp = axs[b].boxplot(
-                    filVals,
-                    positions=[sampleIdx],
-                    widths=[0.5],
+                    groups,
+                    positions=positions,
+                    widths=widths,
                     patch_artist=True,
                     showfliers=False,
                     )
+                """
 
-                axs[b].set_yscale("log")
+                # make subplots for each bin
+                for b in range(num_bins):
 
-                if b > 0:
-                    axs[b].yaxis.set_major_locator(NullLocator())
-                    axs[b].yaxis.set_minor_locator(NullLocator())
-                else:
-                    axs[b].set_ylabel("Contact Frequency")
+                    shade = 0.98 - 0.075 * (b % 2)
 
-                if b == abs(num_bins / 2) - 1:
-                    axs[b].set_title(f"{binsize} - {region}, ({num_bins} bins) - {int(fixedCount * 0.001)}k contacts per sample")
+                    filVals = val[bin_idx == b]
+                    bp = axs[b].boxplot(
+                        filVals,
+                        positions=[sampleIdx],
+                        widths=[0.5],
+                        patch_artist=True,
+                        showfliers=False,
+                        )
 
-                axs[b].set_xticks([])
-                axs[b].set_xlabel(f" bin {b}")
+                    for median in bp['medians']:
+                        median.set_color('black')
 
-                for patch in bp["boxes"]:
-                    patch.set_facecolor(samplesToColor[sample])
-                    patch.set_alpha(0.7)
+                    axs[b].set_yscale("log")
+                    axs[b].set_facecolor(str(shade))
 
-            for ax in axs:
-                ax.set_xlim(-0.5, 2.5)
-                ax.set_ylim(min_val * 0.9, max_val * 1.1)
+                    if b > 0:
+                        axs[b].yaxis.set_major_locator(NullLocator())
+                        axs[b].yaxis.set_minor_locator(NullLocator())
+                    else:
+                        axs[b].set_ylabel("Contact Frequency")
 
-            print(f"Maximum number of reads in {sample} : {max_count}")
+                    if b == abs(num_bins / 2) - 1:
+                        axs[b].set_title(f"{binsize} - {chrName}, ({num_bins} bins) - {int(fixedCount * 0.001)}k cis contacts per sample")
 
-        plt.tight_layout()
+                    axs[b].set_xticks([])
+                    axs[b].set_xlabel(f" bin {b}")
 
-        fig.legend(
-            handles=colorLegend,
-            loc="center right",
-            bbox_to_anchor=(0.99, 0.85),
-            frameon=True,
-            fontsize='small'
-        )
+                    for patch in bp["boxes"]:
+                        patch.set_facecolor(samplesToColor[sample])
+                        patch.set_alpha(0.7)
 
-        pFname = "cvd_boxplot_%s_%s.pdf" % (binsize, region)
-        plt.savefig(join(pDir, pFname), dpi=250, bbox_inches="tight", format="pdf")
+                for ax in axs:
+                    ax.set_xlim(-0.5, 2.5)
+                    ax.set_ylim(min_val * 0.9, max_val * 1.1)
 
-    bash = "/bin/bash"
-    mergePdf = "pdftk %s/cvd_boxplot_%s_chr*.pdf output %s/cvd_boxplot_%s.pdf" % (pDir, binsize, pDir, binsize)
-    subprocess.call(mergePdf, shell=True, executable=bash)
+                print(f"Maximum number of reads in {sample} : {max_count}")
 
-    rm = """find %s -maxdepth 1 -type f -name "*chr*" -exec rm {} ";" """ % (pDir)
-    subprocess.call(rm, shell=True, executable=bash)
+            plt.tight_layout()
+
+            fig.legend(
+                handles=colorLegend,
+                loc="center right",
+                bbox_to_anchor=(0.99, 0.85),
+                frameon=True,
+                fontsize='small'
+            )
+
+            pFname = "cvd_boxplot_%s_%s_run%s.pdf" % (binsize, chrName, i)
+            plt.savefig(join(pDir, pFname), dpi=250, bbox_inches="tight", format="pdf")
+
+        bash = "/bin/bash"
+        mergePdf = "pdftk %s/cvd_boxplot_%s_NC_*_run%s.pdf output %s/cvd_boxplot_%s_run%s.pdf" % (pDir, binsize, i, pDir, binsize, i)
+        subprocess.call(mergePdf, shell=True, executable=bash)
+
+        rm = """find %s -maxdepth 1 -type f -name "*NC_*" -exec rm {} ";" """ % (pDir)
+        subprocess.call(rm, shell=True, executable=bash)

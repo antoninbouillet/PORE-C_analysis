@@ -42,6 +42,8 @@ ylim = (1e-05, 7e-04)
 vmin = 1e2
 vmax = 1e6
 
+# number of bins to draw grey panels corresponding to boxplots in cvd_boxplot
+num_bins = 10
 
 chromsizes = pd.read_csv(
     join(baseDir, "data/regions/chromsizes.bed"), sep="\t", header=None
@@ -102,6 +104,36 @@ def plotCvd(sample, binsize):
     cvd_smooth_agg["balanced.avg.smoothed"].loc[cvd_smooth_agg["dist"] < 2] = np.nan
     f, ax = plt.subplots(1, 1)
     legend_lines = []
+
+    # draw grey background panels that corresponds the the bins in cvd_boxplot
+    # count the minimum and maximum distance (at least 2 pixels apart to avoid 0s)
+    dist = cvd_smooth_agg["dist_bp"].loc[cvd_smooth_agg["dist"] > 1].values
+    # remove 0s
+    max_dist, min_dist = dist.max(), dist.min()
+    bin_edges = np.logspace(np.log10(min_dist), np.log10(max_dist), num_bins + 1)
+
+    print(min_dist, max_dist, "\n")
+    print(bin_edges)
+
+    for i in range(len(bin_edges) - 1):
+        left = bin_edges[i]
+        right = bin_edges[i + 1]
+
+        # print(bin_edges)
+        print(ax.get_xlim())
+
+        # choose a grey shade for this bin
+        shade = 0.98 - 0.075 * (i % 2)
+
+        ax.axvspan(
+            left,
+            right,
+            facecolor=str(shade),
+            alpha=0.5,
+            zorder=0
+        )
+    ax.set_facecolor("none")
+
     for region in chr_viewframe["name"]:
         line = ax.loglog(
             cvd_smooth_agg["dist_bp"].loc[cvd_smooth_agg["region1"] == region],
@@ -119,7 +151,7 @@ def plotCvd(sample, binsize):
             )
         plt.title("%s %s , smoothed" % (label, binsize))
         ax.set_aspect(1.0)
-        ax.grid(lw=0.5)
+        # ax.grid(lw=0.5)
     ax.legend(handles=legend_lines, title="")
     smoothFname = "%s_%s_cvd.pdf" % (sample, binsize)
     plt.savefig(join(pDir, smoothFname), dpi=250, format="pdf")
@@ -167,7 +199,7 @@ def plotCvd(sample, binsize):
         cvd_merged_down = cvd_smooth_agg_downsampled.drop_duplicates(subset=['dist'])[['dist_bp', 'count.avg.smoothed.agg']]
         num_reads[frac] = cvd_smooth_agg_downsampled['count.sum'].sum().astype(int)
 
-    f, ax = plt.subplots(1,1,figsize=(8, 8))
+    f, ax = plt.subplots(1, 1, figsize=(8, 8))
 
     for frac in [1.0]+downsampling_fracs:
         cvd_smooth_agg_downsampled = cvds_smoothed[frac]

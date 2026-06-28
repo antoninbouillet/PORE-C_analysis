@@ -76,9 +76,9 @@ for binsize in "${binsizes[@]}"; do
 	comp1=${mDir}/comp_oe_${binsize}_alpha_vs_beta.fanc
 	comp2=${mDir}/comp_oe_${binsize}_alpha_vs_STM.fanc
 
-	fancplot -o ${pdir}/mirror_zoom_chr3_${binsize}.pdf \
-		NC_047561.1:20mb-55mb \
+	fancplot -o ${pdir}/mirror_chr3_${binsize}.pdf \
+		NC_047561.1:0-58319100 \
 		-p mirror -lvmin -4 -lvmax 4 -uvmin -4 -uvmax 4 \
 		-uc RdBu_r -lc RdBu_r ${comp1} ${comp2} \
-		--title "log2 fold change (α vs β / α vs STM)"
+		--title "log2 fold change (α vs β / α vs α + STM)"
 done

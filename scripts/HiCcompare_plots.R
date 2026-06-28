@@ -16,9 +16,19 @@ comparisons <- list(c("alpha", "beta"), c("alpha", "STM"))
 # this distance is adjusted with the resolution, to search for overlap in the same intervals
 baseAdjacentBins <- 3
 
-color1 <- "#5948d9"
-colorBeta <- "#48D959"
-colorSTM <- "#D95948"
+# old colors
+# alpha : #5948d9
+# beta : #48D959
+# STM : #D95948
+
+# new colors
+# alpha : #6BB0ED
+# beta : #193D8A
+# STM : #EDD472
+
+color1 <- "#6BB0ED"
+colorBeta <- "#193D8A"
+colorSTM <- "#EDD472"
 
 zoomChr = "NC_047561.1"
 zoomStart = 2e7
@@ -72,6 +82,9 @@ for (binsize in binsizes) {
   		 is_signif = ifelse(p.adj < 0.05, TRUE, FALSE),
   		 pval_log = -log10(p.adj))
   
+	n_signif_sample1 <- nrow(all_bins[all_bins$status == status1 & all_bins$is_signif == T, ])
+	n_signif_sample2 <- nrow(all_bins[all_bins$status == status2 & all_bins$is_signif == T, ])
+
   	all_bins$status <- sub("alpha\\+", "α+",  all_bins$status)
   	if (sample2 == "beta") {
   		all_bins$status <- sub("beta\\+", "β+", all_bins$status)
@@ -86,7 +99,19 @@ for (binsize in binsizes) {
 	  assign(signifName, signif)
 	allName <- paste0("all_bins_", sample1, "_", sample2)
 	  assign(allName, all_bins)
+	
+	# need to create a dataframe, otherwise the references to x and y are lost in the RDS
+	nSample1Text <- data.frame(
+	  x = -2.5,
+	  y = 0.8 * max(signif$pval_log),
+	  label = n_signif_sample1
+	)
 
+	nSample2Text <- data.frame(
+	  x = 2.5,
+	  y = 0.8 * max(signif$pval_log),
+	  label = n_signif_sample2
+	)
 
   	volcanoplot <- ggplot() + 
   	  geom_point(data=signif,
@@ -95,6 +120,14 @@ for (binsize in binsizes) {
   	  geom_point(data=all_bins[all_bins$pval_log > 0 & all_bins$is_signif == F, ],
   		     aes(x = adj.M, y = pval_log),
   		     size=1, alpha=0.7, color="grey") +
+	  geom_text(data = nSample1Text,
+		    aes(x, y, label = label),
+		    position = position_dodge(width = 0.7),
+		    check_overlap = TRUE) +
+	  geom_text(data = nSample2Text,
+		    aes(x, y, label = label),
+		    position = position_dodge(width = 0.7),
+		    check_overlap = TRUE) +
   	  geom_hline(yintercept = -log10(0.05), linetype="dashed", linewidth=0.2) +
   	  theme_bw(base_size=22) +
   	  theme(aspect.ratio = 1,
