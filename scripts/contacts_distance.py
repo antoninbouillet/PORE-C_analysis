@@ -42,6 +42,8 @@ ylim = (1e-05, 7e-04)
 vmin = 1e2
 vmax = 1e6
 
+fixedCount = 1.5e5
+
 # number of bins to draw grey panels corresponding to boxplots in cvd_boxplot
 num_bins = 10
 
@@ -62,7 +64,7 @@ def plotCvd(sample, binsize):
     elif sample == "beta":
         label = "β"
     else:
-        label = sample
+        label = "α+STM"
 
     clr = cooler.Cooler(join(cmDir, sample, "%s_%s.cool" % (sample, binsize)))
 
@@ -84,7 +86,7 @@ def plotCvd(sample, binsize):
     # also, dowsample to the same number of reads per sample (150k ~ number of reads in STM 1Mb)
     p = Pool(num_cpus)
     normClrPath = join(cmDir, sample, "%s_%s_fixed.cool" % (sample, binsize))
-    cooltools.sample(clr, out_clr_path=normClrPath, count=50000, nproc=num_cpus)
+    cooltools.sample(clr, out_clr_path=normClrPath, cis_count=fixedCount, nproc=num_cpus)
     clr_fixed = cooler.Cooler(normClrPath)
     cooler.balance_cooler(clr_fixed, map=p.map, store=True, min_nnz=0)
     p.close()
@@ -93,7 +95,7 @@ def plotCvd(sample, binsize):
     # smoothed interactions
 
     cvd_smooth_agg = cooltools.expected_cis(
-        clr=clr,
+        clr=clr_fixed,
         view_df=chr_viewframe,
         smooth=True,
         aggregate_smoothed=True,
@@ -152,7 +154,8 @@ def plotCvd(sample, binsize):
         plt.title("%s %s , smoothed" % (label, binsize))
         ax.set_aspect(1.0)
         # ax.grid(lw=0.5)
-    ax.legend(handles=legend_lines, title="")
+    if sample == "alpha":
+        ax.legend(handles=legend_lines, title="")
     smoothFname = "%s_%s_cvd.pdf" % (sample, binsize)
     plt.savefig(join(pDir, smoothFname), dpi=250, format="pdf")
 
@@ -166,7 +169,7 @@ def plotCvd(sample, binsize):
     num_reads[1.0] = cvd_smooth_agg['count.sum'].sum().astype(int)
 
     cvd_smooth_agg = cooltools.expected_cis(
-        clr=clr,
+        clr=clr_fixed,
         view_df=chr_viewframe,
         clr_weight_name=None,
         smooth=True,

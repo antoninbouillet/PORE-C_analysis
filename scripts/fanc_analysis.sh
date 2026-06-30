@@ -53,7 +53,7 @@ for binsize in "${binsizes[@]}"; do
 		    fancplot --width 6 -o ${pdir}/${sample}_${binsize}_${chromosome}_insulation.pdf \
 			    $chromosome -p triangular --title ${chromosome} ${contact_map} -l \
 			    -p bar --title "signif (α vs β)" ${regionsDir}/all_signif_regions_alpha_beta_${binsize}.bed \
-			    -p bar --title "signif (α vs STM)" ${regionsDir}/all_signif_regions_alpha_STM_${binsize}.bed \
+			    -p bar --title "signif (α vs α+STM)" ${regionsDir}/all_signif_regions_alpha_STM_${binsize}.bed \
 			    -p layer ${regionsDir}/genes.bed
 		done
 

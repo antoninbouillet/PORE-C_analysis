@@ -46,7 +46,7 @@ binsizes = {"1Mb": 1e6, "500kb": 5e5, "250kb": 2.5e5, "100kb": 1e5}
 
 colorLegend = [
     mpatches.Patch(facecolor=col, alpha=0.7, label=name)
-    for name, col in [("α", samplesToColor["alpha"]), ("β", samplesToColor["beta"]), ("STM", samplesToColor["STM"])]
+    for name, col in [("α", samplesToColor["alpha"]), ("β", samplesToColor["beta"]), ("α+STM", samplesToColor["STM"])]
 ]
 
 nameToChr = {"chr1": "NC_047559.1", "chr2": "NC_047560.1",  "chr3": "NC_047561.1", "chr4": "NC_047562.1", "chr5": "NC_047563.1",

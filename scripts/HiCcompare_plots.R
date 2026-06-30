@@ -72,7 +72,7 @@ for (binsize in binsizes) {
   		color2 <- colorBeta
   		levels <- c("α+", "β+")
   	} else {
-  		label2 <- "STM"
+  		label2 <- "α+STM"
   		color2 <- colorSTM
   		levels <- c("α+", "STM+")
   	}
