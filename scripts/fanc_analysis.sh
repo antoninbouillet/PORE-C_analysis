@@ -18,8 +18,9 @@ chromosomes=(NC_047559.1 NC_047560.1 NC_047561.1 NC_047562.1 NC_047563.1 NC_0475
 chromsizes=(55785328 73222313 58319100 53127865 73550375 60151564 62107823 58462999 37089910 57541580)
 
 for binsize in "${binsizes[@]}"; do
-	for sample in "${samples[@]}"; do
 
+	for sample in "${samples[@]}"; do
+		
 		cmDir=${baseDir}/data/contact_maps/${sample}
 		pdir=${baseDir}/plots/fanc_analysis/${sample}
 		contact_map=${cmDir}/${sample}_${binsize}.cool
@@ -54,7 +55,7 @@ for binsize in "${binsizes[@]}"; do
 			    $chromosome -p triangular --title ${chromosome} ${contact_map} -l \
 			    -p bar --title "signif (α vs β)" ${regionsDir}/all_signif_regions_alpha_beta_${binsize}.bed \
 			    -p bar --title "signif (α vs α+STM)" ${regionsDir}/all_signif_regions_alpha_STM_${binsize}.bed \
-			    -p layer ${regionsDir}/genes.bed
+			    # -p layer ${regionsDir}/genes.bed
 		done
 
 		pdftk ${pdir}/${sample}_${binsize}_*_oe.pdf output ${pdir}/${sample}_${binsize}_oe.pdf
