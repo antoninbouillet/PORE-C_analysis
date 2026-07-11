@@ -61,12 +61,12 @@ for (binsize in binsizes) {
 
 		liste_genes_enrich <-enricher(
 		  as.character(liste_genes_map$GeneID),
-		  pvalueCutoff = 0.1,
+		  pvalueCutoff = 0.05,
 		  pAdjustMethod = "BH",
 		  universe = universe,
 		  minGSSize = 20,
 		  maxGSSize = 38000,
-		  qvalueCutoff = 0.1,
+		  qvalueCutoff = 0.2,
 		  gson = NULL,
 		  TERM2GENE = gene_go_mapping %>% select(GO_ID, GeneID),
 		  TERM2NAME = gene_go_mapping %>% select(GO_ID, ontology.name))
@@ -95,12 +95,12 @@ for (binsize in binsizes) {
 
 		liste_genes_enrich_1 <-enricher(
 		  as.character(liste_genes_map_1$GeneID),
-		  pvalueCutoff = 0.1,
+		  pvalueCutoff = 0.05,
 		  pAdjustMethod = "BH",
 		  universe = universe,
 		  minGSSize = 20,
 		  maxGSSize = 38000,
-		  qvalueCutoff = 0.1,
+		  qvalueCutoff = 0.2,
 		  gson = NULL,
 		  TERM2GENE = gene_go_mapping %>% select(GO_ID, GeneID),
 		  TERM2NAME = gene_go_mapping %>% select(GO_ID, ontology.name))
@@ -126,12 +126,12 @@ for (binsize in binsizes) {
 
 		liste_genes_enrich_2 <-enricher(
 		  as.character(liste_genes_map_2$GeneID),
-		  pvalueCutoff = 0.1,
+		  pvalueCutoff = 0.05,
 		  pAdjustMethod = "BH",
 		  universe = universe,
 		  minGSSize = 20,
 		  maxGSSize = 38000,
-		  qvalueCutoff = 0.1,
+		  qvalueCutoff = 0.2,
 		  gson = NULL,
 		  TERM2GENE = gene_go_mapping %>% select(GO_ID, GeneID),
 		  TERM2NAME = gene_go_mapping %>% select(GO_ID, ontology.name))
@@ -151,4 +151,3 @@ for (binsize in binsizes) {
 
 	}
 }
-

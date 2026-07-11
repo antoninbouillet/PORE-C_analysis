@@ -96,10 +96,10 @@ for (binsize in binsizes) {
 	  # draw_plot(vennAA,          x = 0.094, y = 0.05, width = 0.33, height = 0.17) +
 	  # draw_plot(vennBSTM,        x = 0.333, y = 0.05, width = 0.3, height = 0.17) +
 	  
-	  draw_plot_label("A", x = 0.22, y = 0.99, size = 48, hjust = 0) +
-	  draw_plot_label("B", x = 0.22, y = 0.7, size = 48, hjust = 0) +
-	  draw_plot_label("C", x = 0.22, y = 0.32, size = 48, hjust = 0)
-	  # draw_plot_label("D", x = 0.13, y = 0.24, size = 48, hjust = 0)
+	  draw_plot_label("A", x = 0.22, y = 0.99, size = 48, hjust = 0, fontface = 1) +
+	  draw_plot_label("B", x = 0.22, y = 0.7, size = 48, hjust = 0, fontface = 1) +
+	  draw_plot_label("C", x = 0.22, y = 0.32, size = 48, hjust = 0, fontface = 1)
+	  # draw_plot_label("D", x = 0.13, y = 0.24, size = 48, hjust = 0, fontface = 1)
 
 	ggsave2(file.path(baseDir, paste0("fig2_", binsize, ".pdf")),
 		 plot = fig2, device = cairo_pdf, width = 40, height = 25)

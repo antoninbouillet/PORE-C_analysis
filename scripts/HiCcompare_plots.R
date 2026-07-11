@@ -102,23 +102,23 @@ for (binsize in binsizes) {
 	
 	# need to create a dataframe, otherwise the references to x and y are lost in the RDS
 	nSample1Text <- data.frame(
-	  x = -2.5,
+	  x = 0.8 * min(signif$Z),
 	  y = 0.8 * max(signif$pval_log),
 	  label = n_signif_sample1
 	)
 
 	nSample2Text <- data.frame(
-	  x = 2.5,
+	  x = 0.8 * max(signif$Z),
 	  y = 0.8 * max(signif$pval_log),
 	  label = n_signif_sample2
 	)
 
   	volcanoplot <- ggplot() + 
   	  geom_point(data=signif,
-  		     aes(x = adj.M, y = pval_log, color = status),
+  		     aes(x = Z, y = pval_log, color = status),
   		     size=1, alpha=0.7) +
   	  geom_point(data=all_bins[all_bins$pval_log > 0 & all_bins$is_signif == F, ],
-  		     aes(x = adj.M, y = pval_log),
+  		     aes(x = Z, y = pval_log),
   		     size=1, alpha=0.7, color="grey") +
 	  geom_text(data = nSample1Text,
 		    aes(x, y, label = label),
@@ -134,9 +134,9 @@ for (binsize in binsizes) {
   		panel.grid = element_line(linetype="dashed", linewidth=0.2),
   		legend.title = element_blank()) +
   	  scale_y_continuous(limits=c(0, 1.1*max(all_bins$pval_log)), expand=c(0,0)) +
-  	  scale_x_continuous(limits=c(-3,3)) +
+  	  scale_x_continuous(limits=c(1.1*min(all_bins$Z), 1.1*max(all_bins$Z))) +
   	  scale_color_manual(values=c(color1, color2)) +
-  	  labs(y = "-log10(P-adj)", x = "adjuted M value")
+  	  labs(y = "-log10(P-adj)", x = "Z-score of log2 difference")
   	
   	  ggsave(file.path(pdir, paste0("volcanoplot_", sample1, "_", sample2, "_", binsize, ".pdf")), 
   	       plot = volcanoplot, device = cairo_pdf, width = 8, height = 6)
@@ -152,14 +152,14 @@ for (binsize in binsizes) {
   		panel.border = element_rect(color="black"),
   		axis.ticks = element_line(color="black")) +
       geom_point(aes(x=NA, y=NA, color=status)) +
-      scale_color_manual(name="", values=c(color1, color2)) +
-  	  guides(color=guide_legend(order=1)) +
+      scale_color_manual(name="", values=c(color1, color2), guide = guide_legend(order = 1)) +
       new_scale_color() +
   	  geom_point(aes(x=start1, y=start2, color=adj.M), shape = 15, size=pixelsize) + 
-  	  scale_color_gradient2(low=color1, mid="white", high=color2) +
+  	  scale_color_gradient2(low=color1, mid="white", high=color2, guide = guide_colorbar(order = 2)) +
       new_scale_color() +
   	  geom_point(aes(x=start2, y=start1, color=pval_log), shape = 15, size=pixelsize) +
-  	  scale_color_gradient(name="-log10(P-adj)", low="white", high="black") +
+  	  scale_color_gradient(name="-log10(P-adj)", low="white", high="black", guide = guide_colorbar(order = 3)) +
+  	  guides(color=guide_colorbar(order=3)) +
   	  labs(x="", y="") +
   	  facet_wrap(~chr1, scale = "free") +
   	  scale_y_continuous(expand=c(-1.015,1.015)) +
@@ -181,14 +181,13 @@ for (binsize in binsizes) {
   	        panel.border = element_rect(color="black"),
   	        axis.ticks = element_line(color="black")) +
   	  geom_point(aes(x=NA, y=NA, color=status)) +
-  	  scale_color_manual(name="", values=c(color1, color2)) +
-  	  guides(color=guide_legend(order=1)) +
+  	  scale_color_manual(name="", values=c(color1, color2), guide = guide_legend(order=1)) +
   	  new_scale_color() +
   	  geom_point(aes(x=start1, y=start2, color=adj.M), shape = 15, size=zoomPixelsize) + 
-  	  scale_color_gradient2(low=color1, mid="white", high=color2) +
+  	  scale_color_gradient2(low=color1, mid="white", high=color2, guide = guide_colorbar(order=2)) +
   	  new_scale_color() +
   	  geom_point(aes(x=start2, y=start1, color=pval_log), shape = 15, size=zoomPixelsize) +
-  	  scale_color_gradient(name="-log10(P-adj)", low="white", high="black") +
+  	  scale_color_gradient(name="-log10(P-adj)", low="white", high="black", guide = guide_colorbar(order=3)) +
   	  labs(x="", y="") +
   	  scale_y_continuous(expand=c(-1.015,1.015)) +
   	  scale_x_continuous(expand=c(-1.015,1.015))

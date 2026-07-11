@@ -9,7 +9,7 @@ binsizes <- c("1Mb", "500kb", "250kb")
 samples <- c("alpha", "beta", "STM")
 
 
-readPdf <- function(pdfPath, page = 1, density = 600) {
+readPdf <- function(pdfPath, page = 1, density = 250) {
 	pdf <- image_read_pdf(pdfPath, page = page, density = density)
 	pdf <- image_trim(pdf)
 	return(as.raster(pdf))
@@ -42,10 +42,10 @@ for (binsize in binsizes) {
 	  draw_plot(mirrorChr3, x = 0, y = -0.05, width = 0.5, height = 0.5, scale = 0.8) +
 	  draw_plot(mapChr3, x = 0.5, y = 0.17, width = 0.5, height = 0.5, scale = 1) +
 
-	  draw_plot_label("A", x = 0.01, y = 0.98, size = 80, hjust = 0) +
-	  draw_plot_label("B", x = 0.01, y = 0.68, size = 80, hjust = 0) +
-	  draw_plot_label("C", x = 0.5, y = 0.68, size = 80, hjust = 0) +
-	  draw_plot_label("D", x = 0.01, y = 0.4, size = 80, hjust = 0)
+	  draw_plot_label("A", x = 0.01, y = 0.98, size = 80, hjust = 0, fontface = 1) +
+	  draw_plot_label("B", x = 0.01, y = 0.68, size = 80, hjust = 0, fontface = 1) +
+	  draw_plot_label("C", x = 0.5, y = 0.68, size = 80, hjust = 0, fontface = 1) +
+	  draw_plot_label("D", x = 0.01, y = 0.4, size = 80, hjust = 0, fontface = 1)
 
 
 	ggsave2(file.path(baseDir, paste0("fig1_", binsize, ".pdf")),
