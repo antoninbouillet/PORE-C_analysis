@@ -2,7 +2,7 @@
 
 source /home/anton/venv/chess/bin/activate
 
-binsizes=(1Mb 500kb 250kb 100kb)
+binsizes=(1Mb 500kb 250kb)
 vminCp=-0.1
 vmaxCp=0.1
 

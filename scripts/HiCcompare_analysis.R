@@ -76,7 +76,7 @@ for (comparison in comparisons) {
   
   compStr = paste(comparison[1], "vs", comparison[2])
   # coordinates corresponding to the pairs with significant interaction differences (to intersect with the genes)
-  all_signif_pos1 <- all_signif %>% mutate(log_p = -log10(p.adj)) %>% select(chr1, start1, end1, A, log_p, M) %>%rename(chr = "chr1", start = "start1", end = "end1") %>% mutate(A = 0)
+  all_signif_pos1 <- all_signif %>% mutate(log_p = -log10(p.adj)) %>% select(chr1, start1, end1, A, log_p, M) %>% rename(chr = "chr1", start = "start1", end = "end1") %>% mutate(A = 0)
   all_signif_pos2 <- all_signif %>% mutate(log_p = -log10(p.adj)) %>% select(chr2, start2, end2, A, log_p, M) %>% rename(chr = "chr2", start = "start2", end = "end2") %>% mutate(A = 0)
   all_signif_bins <- rbind(all_signif_pos1, all_signif_pos2) %>% mutate()
     

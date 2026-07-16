@@ -155,10 +155,10 @@ for (binsize in binsizes) {
       scale_color_manual(name="", values=c(color1, color2), guide = guide_legend(order = 1)) +
       new_scale_color() +
   	  geom_point(aes(x=start1, y=start2, color=adj.M), shape = 15, size=pixelsize) + 
-  	  scale_color_gradient2(low=color1, mid="white", high=color2, guide = guide_colorbar(order = 2)) +
+  	  scale_color_gradient2(low=color1, mid="white", , limits=c(-3, 3), high=color2, guide = guide_colorbar(order = 2)) +
       new_scale_color() +
   	  geom_point(aes(x=start2, y=start1, color=pval_log), shape = 15, size=pixelsize) +
-  	  scale_color_gradient(name="-log10(P-adj)", low="white", high="black", guide = guide_colorbar(order = 3)) +
+  	  scale_color_gradient(name="-log10(P-adj)", low="white", high="black", limits=c(0, 2), guide = guide_colorbar(order = 3)) +
   	  guides(color=guide_colorbar(order=3)) +
   	  labs(x="", y="") +
   	  facet_wrap(~chr1, scale = "free") +

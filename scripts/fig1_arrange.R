@@ -28,7 +28,7 @@ for (binsize in binsizes) {
 
 	boxplotChr3 <- grid::rasterGrob(readPdf(paste0(baseDir, paste0("contacts_distance/cvd_boxplot_", binsize, "_run1.pdf")), page = 3), interpolate = F)
 	mapChr3 <- grid::rasterGrob(readPdf(paste0(baseDir, paste0("fanc_analysis/alpha/alpha_", binsize, "_insulation.pdf")), page = 3), interpolate = F)
-	mirrorChr3 <- grid::rasterGrob(readPdf(paste0(baseDir, paste0("fanc_comparison/mirror_chr3_", binsize, ".pdf"))), interpolate = F)
+	mirrorChr3 <- grid::rasterGrob(readPdf(paste0(baseDir, paste0("fanc_comparison/mirror_oe_", binsize, ".pdf")), page = 3), interpolate = F)
 
 	cvdY = 0.58
 	cvdW = 0.33

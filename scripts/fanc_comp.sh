@@ -2,7 +2,7 @@
 
 source /home/anton/venv/chess/bin/activate
 
-binsizes=(1Mb 500kb 250kb 100kb)
+binsizes=(1Mb 500kb 250kb)
 comp=(beta STM)
 vmin=-3
 vmax=3
@@ -69,16 +69,41 @@ for binsize in "${binsizes[@]}"; do
 		done
 	done
 
-	# mirror plot on exmaple region in chr3 : log2FC alpha/beta vs alpha/STM
+	# mirror plots : log2FC alpha/beta vs alpha/STM
 
 	pdir=${baseDir}/plots/fanc_comparison
 
-	comp1=${mDir}/comp_oe_${binsize}_alpha_vs_beta.fanc
-	comp2=${mDir}/comp_oe_${binsize}_alpha_vs_STM.fanc
+	comp1=${mDir}/comp_${binsize}_alpha_vs_beta.fanc
+	comp2=${mDir}/comp_${binsize}_alpha_vs_STM.fanc
 
-	fancplot -o ${pdir}/mirror_chr3_${binsize}.pdf \
-		NC_047561.1:0-58319100 \
-		-p mirror -lvmin -4 -lvmax 4 -uvmin -4 -uvmax 4 \
-		-uc RdBu_r -lc RdBu_r ${comp1} ${comp2} \
-		--title "log2 fold change (α vs β / α vs α + STM)"
+	comp_oe1=${mDir}/comp_oe_${binsize}_alpha_vs_beta.fanc
+	comp_oe2=${mDir}/comp_oe_${binsize}_alpha_vs_STM.fanc
+
+
+	for i in "${!chromosomes[@]}"; do
+
+		chromosome="${chromosomes[$i]}"
+		chromsize="${chromsizes[$i]}"
+
+		fancplot -o "${pdir}"/mirror_ct_"${chromosome}"_"${binsize}".pdf \
+			"${chromosome}":0-"${chromsize}" \
+			-p mirror -lvmin -4 -lvmax 4 -uvmin -4 -uvmax 4 \
+			-uc RdBu_r -lc RdBu_r "${comp1}" "${comp2}" \
+			--title "log2 fold change (α vs β / α vs α + STM)"
+
+		fancplot -o "${pdir}"/mirror_oe_"${chromosome}"_${binsize}.pdf \
+			"${chromosome}":0-"${chromsize}" \
+			-p mirror -lvmin -4 -lvmax 4 -uvmin -4 -uvmax 4 \
+			-uc RdBu_r -lc RdBu_r "${comp_oe1}" "${comp_oe2}" \
+			--title "log2 fold change observed / expected (α vs β / α vs α + STM)"
+
+	done
+
+	pdftk "${pdir}"/mirror_ct_*_"${binsize}".pdf output "${pdir}"/mirror_ct_"${binsize}".pdf
+	pdftk "${pdir}"/mirror_oe_*_"${binsize}".pdf output "${pdir}"/mirror_oe_"${binsize}".pdf
+
+	for chromosome in "${chromosomes[@]}"; do
+		find ${pdir} -type f -name "*${chromosome}_${binsize}.pdf" -exec rm {} ";"
+	done
+
 done

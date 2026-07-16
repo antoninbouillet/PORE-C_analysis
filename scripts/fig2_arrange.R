@@ -73,8 +73,8 @@ for (binsize in binsizes) {
 
 
 	#vennSize = 0.8
-	#vennAA <- readRDS(file = file.path(paste0(pDir, "overlap"), paste0("Venn_alpha_alpha_", binsize, ".rds")))
-	#vennBSTM <- readRDS(file = file.path(paste0(pDir, "overlap"), paste0("Venn_beta_STM_", binsize, ".rds")))
+	vennAA <- readRDS(file = file.path(paste0(pDir, "overlap"), paste0("Venn_alpha_alpha_", binsize, ".rds")))
+	vennBSTM <- readRDS(file = file.path(paste0(pDir, "overlap"), paste0("Venn_beta_STM_", binsize, ".rds")))
 
 	sizeMod = 1.2
 	fig2 <- ggdraw() +
@@ -103,4 +103,15 @@ for (binsize in binsizes) {
 
 	ggsave2(file.path(baseDir, paste0("fig2_", binsize, ".pdf")),
 		 plot = fig2, device = cairo_pdf, width = 40, height = 25)
+
+	figS2 <- ggdraw() + 
+		draw_plot(vennAA, x = 0, width = 0.5) +
+		draw_plot(vennBSTM, x = 0.5, width = 0.5) +
+		draw_plot_label("A", x = 0, y = 0.85, size = 28, hjust = 0, fontface = 1) +
+		draw_plot_label("B", x = 0.5, y = 0.85, size = 28, hjust = 0, fontface = 1)
+
+	ggsave2(file.path(baseDir, paste0("figS2_", binsize, ".pdf")),
+		 plot = figS2, device = cairo_pdf, width = 12, height = 8)
+
+
 }
