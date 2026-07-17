@@ -85,13 +85,13 @@ for (binsize in binsizes) {
 	  draw_plot(distAB,           x = 0.225, y = 0.835, width = 0.22 * sizeMod, height = 0.11 * sizeMod) +
 	  draw_plot(distASTM,         x = 0.455, y = 0.835, width = 0.22 * sizeMod, height = 0.11 * sizeMod) +
 	  
-	  draw_plot(chrDiagram,       x = 0.31, y = 0.57, width = 0.25 * sizeMod, height = 0.12 * sizeMod) +
+	  draw_plot(chrDiagram,       x = 0.32, y = 0.57, width = 0.25 * sizeMod, height = 0.12 * sizeMod) +
 
-	  draw_plot(contactMapAB,     x = 0.07, y = 0.315, width = 0.5 * sizeMod, height = 0.24 * sizeMod) +
-	  draw_plot(contactMapASTM,   x = 0.3, y = 0.315, width = 0.5 * sizeMod, height = 0.24 * sizeMod) +
+	  draw_plot(contactMapAB,     x = 0.0682, y = 0.315, width = 0.5 * sizeMod, height = 0.24 * sizeMod) +
+	  draw_plot(contactMapASTM,   x = 0.2985, y = 0.315, width = 0.5 * sizeMod, height = 0.24 * sizeMod) +
 	  
-	  draw_plot(goAB,             x = 0.06, y = 0, width = 0.5 * sizeMod, height = 0.24 * sizeMod) +
-	  draw_plot(goASTM,           x = 0.292 , y = 0, width = 0.5 * sizeMod, height = 0.24 * sizeMod) +
+	  draw_plot(goAB,             x = 0.057, y = 0, width = 0.5 * sizeMod, height = 0.24 * sizeMod) +
+	  draw_plot(goASTM,           x = 0.2875 , y = 0, width = 0.5 * sizeMod, height = 0.24 * sizeMod) +
 
 	  # draw_plot(vennAA,          x = 0.094, y = 0.05, width = 0.33, height = 0.17) +
 	  # draw_plot(vennBSTM,        x = 0.333, y = 0.05, width = 0.3, height = 0.17) +
@@ -104,14 +104,14 @@ for (binsize in binsizes) {
 	ggsave2(file.path(baseDir, paste0("fig2_", binsize, ".pdf")),
 		 plot = fig2, device = cairo_pdf, width = 40, height = 25)
 
-	figS2 <- ggdraw() + 
+	figS5 <- ggdraw() + 
 		draw_plot(vennAA, x = 0, width = 0.5) +
 		draw_plot(vennBSTM, x = 0.5, width = 0.5) +
 		draw_plot_label("A", x = 0, y = 0.85, size = 28, hjust = 0, fontface = 1) +
 		draw_plot_label("B", x = 0.5, y = 0.85, size = 28, hjust = 0, fontface = 1)
 
-	ggsave2(file.path(baseDir, paste0("figS2_", binsize, ".pdf")),
-		 plot = figS2, device = cairo_pdf, width = 12, height = 8)
+	ggsave2(file.path(baseDir, paste0("figS5_", binsize, ".pdf")),
+		 plot = figS5, device = cairo_pdf, width = 12, height = 8)
 
 
 }

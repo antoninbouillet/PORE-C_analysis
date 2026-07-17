@@ -22,6 +22,9 @@ for (binsize in binsizes) {
 
 		cvd <- grid::rasterGrob(readPdf(paste0(baseDir, "contacts_distance/", sample, "/", sample, "_", binsize, "_cvd.pdf")), interpolate = F)
 		assign(paste0(sample, "_cvd"), cvd)
+
+		cvDown <- grid::rasterGrob(readPdf(paste0(baseDir, "contacts_distance/", sample, "/", sample, "_", binsize, "_cvd_downsampled.pdf")), interpolate = F)
+		assign(paste0(sample, "_cvDown"), cvDown)
 	}
 
 	# load an example of a contact map on chr3 : contact maps alpha + significant bins + difference alpha / beta and alpha / STM
@@ -50,4 +53,14 @@ for (binsize in binsizes) {
 
 	ggsave2(file.path(baseDir, paste0("fig1_", binsize, ".pdf")),
 		 plot = fig1, device = cairo_pdf, width = 45, height = 45)
+
+	figS3 <- ggdraw() +
+	  draw_plot(alpha_cvDown, x = 0.01, width = 0.3) +
+	  draw_plot(beta_cvDown, x = 0.34, width = 0.3) +
+	  draw_plot(STM_cvDown, x = 0.67, width = 0.3)
+
+	ggsave2(file.path(baseDir, paste0("figS3_", binsize, ".pdf")),
+		 plot = figS3, device = cairo_pdf, width = 45, height = 45)
+
+
 }

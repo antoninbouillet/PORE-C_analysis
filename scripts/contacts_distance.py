@@ -36,6 +36,8 @@ samples = ["alpha", "beta", "STM"]
 
 binsizes = {"1Mb": 1e6, "500kb": 5e5, "250kb": 2.5e5, "100kb": 1e5}
 yMins = {"1Mb": 2e-2, "500kb": 1e-2, "250kb": 2e-3, "100kb": 2e-4}
+yLims = {"1Mb": (1.1e-3, 1.5e-2), "500kb": (6e-4, 1.8e-2), "250kb": (3e-4, 1.5e-2), "100kb": (1e-4, 1.5e-2)}
+
 xlim = (0, 10e7)
 ylim = (1e-05, 7e-04)
 
@@ -92,7 +94,7 @@ def plotCvd(sample, binsize):
     p.close()
     p.terminate()
 
-    # smoothed interactions
+    # smoothed interactions, using contact maps scaled to the same number of reads
 
     cvd_smooth_agg = cooltools.expected_cis(
         clr=clr_fixed,
@@ -114,15 +116,14 @@ def plotCvd(sample, binsize):
     max_dist, min_dist = dist.max(), dist.min()
     bin_edges = np.logspace(np.log10(min_dist), np.log10(max_dist), num_bins + 1)
 
-    print(min_dist, max_dist, "\n")
-    print(bin_edges)
+    # print(min_dist, max_dist, "\n")
+    # print(bin_edges)
 
     for i in range(len(bin_edges) - 1):
         left = bin_edges[i]
         right = bin_edges[i + 1]
 
-        # print(bin_edges)
-        print(ax.get_xlim())
+        # print(ax.get_xlim())
 
         # choose a grey shade for this bin
         shade = 0.98 - 0.075 * (i % 2)
@@ -149,11 +150,13 @@ def plotCvd(sample, binsize):
         )
         ax.set(
             xlabel="separation, bp", ylabel="IC contact frequency",
-            xlim=(2*minDist, 8e7)
+            xlim=(2*minDist, 8e7),
+            ylim=(yLims[binsize][0], yLims[binsize][1])
             )
-        plt.title("%s %s , smoothed" % (label, binsize))
+        plt.title("%s" % label)
         ax.set_aspect(1.0)
         # ax.grid(lw=0.5)
+
     if sample == "alpha":
         ax.legend(handles=legend_lines, title="")
     smoothFname = "%s_%s_cvd.pdf" % (sample, binsize)
@@ -164,12 +167,12 @@ def plotCvd(sample, binsize):
     ]
 
     # create contact vs distance plots for dowsampled data (10% and 1% of reads)
+    # from non-normalized contact maps
+    # cvds_smoothed[1.0] = cvd_smooth_agg.copy()
+    # num_reads[1.0] = cvd_smooth_agg['count.sum'].sum().astype(int)
 
-    cvds_smoothed[1.0] = cvd_smooth_agg.copy()
-    num_reads[1.0] = cvd_smooth_agg['count.sum'].sum().astype(int)
-
-    cvd_smooth_agg = cooltools.expected_cis(
-        clr=clr_fixed,
+    cvd_smooth_agg_total = cooltools.expected_cis(
+        clr=clr,
         view_df=chr_viewframe,
         clr_weight_name=None,
         smooth=True,
@@ -177,18 +180,18 @@ def plotCvd(sample, binsize):
         nproc=num_cpus
     )
 
-    cvd_smooth_agg['count.avg.smoothed'].loc[cvd_smooth_agg['dist'] < 2] = np.nan
-    cvd_merged_down = cvd_smooth_agg.drop_duplicates(subset=['dist'])[['dist_bp', 'count.avg.smoothed.agg']]
+    cvd_smooth_agg_total['count.avg.smoothed'].loc[cvd_smooth_agg_total['dist'] < 2] = np.nan
+    cvd_merged_down = cvd_smooth_agg_total.drop_duplicates(subset=['dist'])[['dist_bp', 'count.avg.smoothed.agg']]
     der = np.gradient(np.log(cvd_merged_down['count.avg.smoothed.agg']),
                       np.log(cvd_merged_down['dist_bp']))
 
-    cvds_smoothed[1.0] = cvd_smooth_agg.copy()
-    num_reads[1.0] = cvd_smooth_agg['count.sum'].sum().astype(int)
+    cvds_smoothed[1.0] = cvd_smooth_agg_total.copy()
+    num_reads[1.0] = cvd_smooth_agg_total['count.sum'].sum().astype(int)
 
     for frac in downsampling_fracs:
         fracClrPath = join(cmDir, sample, "%s_%s_downsample_%s.cool" % (sample, binsize, frac))
         clr_downsampled = cooler.Cooler(fracClrPath)
-        cvd_smooth_agg_downsampled = cooltools.expected_cis(
+        cvd_smooth_agg_total_downsampled = cooltools.expected_cis(
             clr=clr_downsampled,
             view_df=chr_viewframe,
             clr_weight_name=None,
@@ -196,27 +199,31 @@ def plotCvd(sample, binsize):
             aggregate_smoothed=True,
             nproc=num_cpus
         )
-        cvd_smooth_agg_downsampled['count.avg.smoothed'].loc[cvd_smooth_agg_downsampled['dist'] < 2] = np.nan
-        cvds_smoothed[frac] = cvd_smooth_agg_downsampled
+        cvd_smooth_agg_total_downsampled['count.avg.smoothed'].loc[cvd_smooth_agg_total_downsampled['dist'] < 2] = np.nan
+        cvds_smoothed[frac] = cvd_smooth_agg_total_downsampled
 
-        cvd_merged_down = cvd_smooth_agg_downsampled.drop_duplicates(subset=['dist'])[['dist_bp', 'count.avg.smoothed.agg']]
-        num_reads[frac] = cvd_smooth_agg_downsampled['count.sum'].sum().astype(int)
+        cvd_merged_down = cvd_smooth_agg_total_downsampled.drop_duplicates(subset=['dist'])[['dist_bp', 'count.avg.smoothed.agg']]
+        num_reads[frac] = cvd_smooth_agg_total_downsampled['count.sum'].sum().astype(int)
 
     f, ax = plt.subplots(1, 1, figsize=(8, 8))
 
     for frac in [1.0]+downsampling_fracs:
-        cvd_smooth_agg_downsampled = cvds_smoothed[frac]
-        cvd_smooth_agg_downsampled['count.avg.smoothed'].loc[cvd_smooth_agg_downsampled['dist'] < 2] = np.nan
+        cvd_smooth_agg_total_downsampled = cvds_smoothed[frac]
+        cvd_smooth_agg_total_downsampled['count.avg.smoothed'].loc[cvd_smooth_agg_total_downsampled['dist'] < 2] = np.nan
         ax.loglog(
-            cvd_smooth_agg_downsampled['dist_bp'],
-            cvd_smooth_agg_downsampled['count.avg.smoothed'],
+            cvd_smooth_agg_total_downsampled['dist_bp'],
+            cvd_smooth_agg_total_downsampled['count.avg.smoothed'],
             label=f'{frac*100}%, {num_reads[frac]} reads')
 
     ax.set(
         xlabel='separation, bp',
-        ylabel='contact frequency')
+        ylabel='IC contact frequency',
+        xlim=(2*minDist, 8e7),
+        ylim=(1e-2, 1e2)
+        )
+
     ax.grid(lw=0.5)
-    # ax.title("%s %s , smoothed" % (label, binsize))
+    ax.set_title("%s" % label)
     ax.legend()
     ax.set_ylim(ymin=yMins[binsize])
     downFname = "%s_%s_cvd_downsampled.pdf" % (sample, binsize)
@@ -248,8 +255,9 @@ def plotCvd(sample, binsize):
     # proportions de contact trans-chromosomiques
 
     # average contacts, in this case between pairs of chromosomal arms:
+    # from data scaled to the same number of reads
     ac = cooltools.expected_trans(
-        clr, view_df=None, nproc=num_cpus  # full chromosomes as the view
+        clr_fixed, view_df=None, nproc=num_cpus  # full chromosomes as the view
     )
     # pivot a table to generate a pair-wise average interaction heatmap:
     acp = ac.pivot_table(
