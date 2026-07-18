@@ -31,7 +31,12 @@ for (binsize in binsizes) {
 
 	boxplotChr3 <- grid::rasterGrob(readPdf(paste0(baseDir, paste0("contacts_distance/cvd_boxplot_", binsize, "_run1.pdf")), page = 3), interpolate = F)
 	mapChr3 <- grid::rasterGrob(readPdf(paste0(baseDir, paste0("fanc_analysis/alpha/alpha_", binsize, "_insulation.pdf")), page = 3), interpolate = F)
-	mirrorChr3 <- grid::rasterGrob(readPdf(paste0(baseDir, paste0("fanc_comparison/mirror_oe_", binsize, ".pdf")), page = 3), interpolate = F)
+	mirrorChr3 <- grid::rasterGrob(readPdf(paste0(baseDir, paste0("fanc_comparison/mirror_ct_", binsize, ".pdf")), page = 3), interpolate = F)
+	
+	for (i in seq(10)) {
+		mirrorAllChr <- grid::rasterGrob(readPdf(paste0(baseDir, paste0("fanc_comparison/mirror_ct_", binsize, ".pdf")), page = i), interpolate = F)
+		assign(paste0("mirrorAllChr_", i), mirrorAllChr)
+	}
 
 	cvdY = 0.58
 	cvdW = 0.33
@@ -53,14 +58,29 @@ for (binsize in binsizes) {
 
 	ggsave2(file.path(baseDir, paste0("fig1_", binsize, ".pdf")),
 		 plot = fig1, device = cairo_pdf, width = 45, height = 45)
-
+	
 	figS3 <- ggdraw() +
+		draw_plot(mirrorAllChr_1, x = 0.01, y = 0.76, width = 0.3, height = 0.23) +
+		draw_plot(mirrorAllChr_2, x = 0.34, y = 0.76, width = 0.3, height = 0.23) +
+		draw_plot(mirrorAllChr_3, x = 0.67, y = 0.76, width = 0.3, height = 0.23) +
+		draw_plot(mirrorAllChr_4, x = 0.01, y = 0.51, width = 0.3, height = 0.23) +
+		draw_plot(mirrorAllChr_5, x = 0.34, y = 0.51, width = 0.3, height = 0.23) +
+		draw_plot(mirrorAllChr_6, x = 0.67, y = 0.51, width = 0.3, height = 0.23) +
+		draw_plot(mirrorAllChr_7, x = 0.01, y = 0.26, width = 0.3, height = 0.23) +
+		draw_plot(mirrorAllChr_8, x = 0.34, y = 0.26, width = 0.3, height = 0.23) +
+		draw_plot(mirrorAllChr_9, x = 0.67, y = 0.26, width = 0.3, height = 0.23) +
+		draw_plot(mirrorAllChr_10, x = 0.01, y = 0.01, width = 0.3, height = 0.23)
+
+	ggsave2(file.path(baseDir, paste0("figS3_", binsize, ".pdf")),
+		 plot = figS3, device = cairo_pdf, width = 45, height = 45)
+
+	figS4 <- ggdraw() +
 	  draw_plot(alpha_cvDown, x = 0.01, width = 0.3) +
 	  draw_plot(beta_cvDown, x = 0.34, width = 0.3) +
 	  draw_plot(STM_cvDown, x = 0.67, width = 0.3)
 
-	ggsave2(file.path(baseDir, paste0("figS3_", binsize, ".pdf")),
-		 plot = figS3, device = cairo_pdf, width = 45, height = 45)
+	ggsave2(file.path(baseDir, paste0("figS4_", binsize, ".pdf")),
+		 plot = figS4, device = cairo_pdf, width = 45, height = 45)
 
 
 }

@@ -65,6 +65,9 @@ for (binsize in binsizes) {
 	contactMapAB <- readRDS(file = file.path(ABdir, paste0("map_zoom_HiCcompare_alpha_beta_", binsize, ".rds")))
 	contactMapASTM <- readRDS(file = file.path(ASTMdir, paste0("map_zoom_HiCcompare_alpha_STM_", binsize, ".rds")))
 
+	contactMapsAB <- readRDS(file = file.path(ABdir, paste0("maps_HiCcompare_alpha_beta_", binsize, ".rds")))
+	contactMapsASTM <- readRDS(file = file.path(ASTMdir, paste0("maps_HiCcompare_alpha_STM_", binsize, ".rds")))
+
 	gSize = 1
 	goAB <- readRDS(file = file.path(ABdir, paste0("GO_terms_bins_", binsize, "_alpha_beta_all.rds")))
 	goASTM <- readRDS(file = file.path(ASTMdir, paste0("GO_terms_bins_", binsize, "_alpha_STM_all.rds")))
@@ -103,15 +106,24 @@ for (binsize in binsizes) {
 
 	ggsave2(file.path(baseDir, paste0("fig2_", binsize, ".pdf")),
 		 plot = fig2, device = cairo_pdf, width = 40, height = 25)
-
+	
 	figS5 <- ggdraw() + 
+		draw_plot(contactMapsAB, y = 0, height = 0.5) +
+		draw_plot(contactMapsASTM, y = 0.5, height = 0.5) +
+		draw_plot_label("A", x = 0.23, y = 1, size = 24, hjust = 0, fontface = 1) +
+		draw_plot_label("B", x = 0.23, y = 0.5, size = 24, hjust = 0, fontface = 1)
+
+	ggsave2(file.path(baseDir, paste0("figS5_", binsize, ".pdf")),
+		 plot = figS5, device = cairo_pdf, width = 20, height = 14)
+
+	figS6 <- ggdraw() + 
 		draw_plot(vennAA, x = 0, width = 0.5) +
 		draw_plot(vennBSTM, x = 0.5, width = 0.5) +
 		draw_plot_label("A", x = 0, y = 0.85, size = 28, hjust = 0, fontface = 1) +
 		draw_plot_label("B", x = 0.5, y = 0.85, size = 28, hjust = 0, fontface = 1)
 
-	ggsave2(file.path(baseDir, paste0("figS5_", binsize, ".pdf")),
-		 plot = figS5, device = cairo_pdf, width = 12, height = 8)
+	ggsave2(file.path(baseDir, paste0("figS6_", binsize, ".pdf")),
+		 plot = figS6, device = cairo_pdf, width = 12, height = 8)
 
 
 }

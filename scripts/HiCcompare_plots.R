@@ -168,6 +168,8 @@ for (binsize in binsizes) {
   	ggsave(file.path(pdir, paste0("maps_HiCcompare_", sample1, "_", sample2, "_", binsize, ".pdf")), 
   	       plot = maps, device = cairo_pdf, width = 8, height = 6)
   	
+        saveRDS(maps, file = file.path(pdir, paste0("maps_HiCcompare_", sample1, "_", sample2, "_", binsize, ".rds")))
+
   	# zoom on one region of chr3 as an example
   	mapZoom <- ggplot(data = all_bins[all_bins$chr1 == zoomChr & 
   	                                 all_bins$start1 > zoomStart & 

@@ -184,7 +184,8 @@ for i in range(1, 4):
                         axs[b].set_ylabel("Contact Frequency")
 
                     if b == abs(num_bins / 2) - 1:
-                        axs[b].set_title(f"{binsize} - {chrName}, ({num_bins} bins) - {int(fixedCount * 0.001)}k cis contacts per sample")
+                        # axs[b].set_title(f"{binsize} - {chrName}, ({num_bins} bins) - {int(fixedCount * 0.001)}k cis contacts per sample")
+                        axs[b].set_title(chrName)
 
                     axs[b].set_xticks([])
                     axs[b].set_xlabel(f" bin {b}")
