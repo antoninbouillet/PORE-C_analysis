@@ -3,7 +3,7 @@
 samples=(alpha beta STM)
 binNames=(1Mb 500kb 250kb 100kb)
 binSizes=(1000000 500000 250000 100000)
-baseDir=/home/anton/Bureau/PORE-C_repo
+baseDir=/home/anton/Bureau/PORE-C_repo_Sanger
 rDir=${baseDir}/data/regions
 cmDir=${baseDir}/data/contact_maps
 pairDir=${baseDir}/data/pairs
@@ -28,7 +28,7 @@ for i in "${!binNames[@]}"; do
 		cooler cload pairs -c1 2 -p1 3 \
 		-c2 4 -p2 5 \
 		${rDir}/bins_${binName}.bed \
-		${pairDir}/${sample}/${sample}_2.pairs.gz \
+		${pairDir}/${sample}/${sample}.pairs.gz \
 		${cmDir}/${sample}/${sample}_${binName}.cool
 
 		wait
@@ -38,4 +38,3 @@ for i in "${!binNames[@]}"; do
 	done
 	
 done
-

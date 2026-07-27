@@ -10,13 +10,13 @@ vminOe=-2
 vmaxOe=2
 
 samples=(alpha beta STM)
-genome=/home/anton/Bureau/MG_genome/GCF_902806645.1/GCF_902806645.1_cgigas_uk_roslin_v1_genomic.fa
-baseDir=/home/anton/Bureau/PORE-C_repo
+genome=/home/anton/Bureau/MG_genome/GCF_963853765.1/GCF_963853765.1_xbMagGiga1.1_genomic.fna
+baseDir=/home/anton/Bureau/PORE-C_repo_Sanger
 regionsDir=${baseDir}/data/regions
 
-chromosomes=(NC_047559.1 NC_047560.1 NC_047561.1 NC_047562.1 NC_047563.1 NC_047564.1 NC_047565.1 NC_047566.1 NC_047567.1 NC_047568.1)
-chromsizes=(55785328 73222313 58319100 53127865 73550375 60151564 62107823 58462999 37089910 57541580)
-
+chromosomes=(NC_088853.1 NC_088854.1 NC_088855.1 NC_088856.1 NC_088857.1 NC_088858.1 NC_088859.1 NC_088860.1 NC_088861.1 NC_088862.1)
+chromsizes=(76070991 61469542 61039741 57946171 57274926 56905015 53672946 51133819 50364239 37310742)
+ 
 for binsize in "${binsizes[@]}"; do
 
 	for sample in "${samples[@]}"; do

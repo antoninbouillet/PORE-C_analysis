@@ -4,7 +4,7 @@ library(magick)
 
 rm(list = ls())
 
-baseDir <- "/home/anton/Bureau/PORE-C_repo/plots/"
+baseDir <- "/home/anton/Bureau/PORE-C_repo_Sanger/plots/"
 binsizes <- c("1Mb", "500kb", "250kb")
 samples <- c("alpha", "beta", "STM")
 

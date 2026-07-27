@@ -30,7 +30,7 @@ if not num_cpus:
 num_cpus = int(num_cpus)
 
 # import des fichiers
-baseDir = "/home/anton/Bureau/PORE-C_repo"
+baseDir = "/home/anton/Bureau/PORE-C_repo_Sanger"
 cmDir = join(baseDir, "data/contact_maps/")
 samples = ["alpha", "beta", "STM"]
 

@@ -11,20 +11,21 @@ library(ggplot2)
 library(dplyr)
 
 binsizes <- c("1Mb", "500kb", "250kb")
-baseDir <- "/home/anton/Bureau/PORE-C_repo/"
+baseDir <- "/home/anton/Bureau/PORE-C_repo_Sanger/"
 rDir <- paste0(baseDir, "data/regions")
 
 comparisons <- list(c("alpha", "beta"), c("alpha", "STM"))
 
 # load ontology data
 ontology <- get_ontology("/home/anton/Bureau/MG_genome/go.obo")
-gaf_data <- read.table("/home/anton/Bureau/MG_genome/GCF_902806645.1/GO/GCF_902806645.1_cgigas_uk_roslin_v1_gene_ontology.gaf", 
+gaf_data <- read.table("/home/anton/Bureau/MG_genome/GCF_963853765.1/GCF_963853765.1-RS_2024_06_gene_ontology_R.gaf", 
 		       comment = "!", header = TRUE, sep = "\t", stringsAsFactors = FALSE)
 
 colnames(gaf_data) <- c("DB", "GeneID", "Symbol", "Qualifier", "GO_ID", "Reference", 
                          "Evidence_Code", "With_From", "Aspect", "Gene_Name", 
                          "Gene_Synonym", "Type", "Taxon", "Date", "Assigned_By", 
                          "Annot_Ext", "Gene_Product_Form_ID")
+
 term2name <- data.frame(ontology$id, ontology$name) %>% rename(GO_ID = "ontology.id")
 gaf_data <- gaf_data %>% filter(GO_ID %in% ontology$id)
 gene_go_mapping <- gaf_data %>% left_join(term2name, by="GO_ID")
@@ -59,6 +60,9 @@ for (binsize in binsizes) {
 		n_mapped <-  n_distinct(liste_genes_map$Symbol)
 		n_total <- n_distinct(all_signif_genes$V11)
 
+		print(n_mapped)
+		print(n_total)
+
 		liste_genes_enrich <-enricher(
 		  as.character(liste_genes_map$GeneID),
 		  pvalueCutoff = 0.05,
@@ -79,7 +83,7 @@ for (binsize in binsizes) {
 			axis.text = element_text(color="black"),
 			plot.title = element_text(size=12, hjust=0.5), 
 			aspect.ratio  = 1.2) +
-		  labs(title = paste(label1, "vs", label2, "(", binsize, "bins) :", n_mapped," / ", n_total, "genes assigned"))
+		  labs(title = paste(label1, "vs", label2,"-", n_mapped," / ", n_total, "genes assigned"))
 
 		ggsave(file.path(pdir, paste0("GO_terms_bins_", binsize, "_", sample1, "_", sample2, "_all.pdf")), 
 		       plot = plotAll, device = cairo_pdf, width = 8, height = 6)
@@ -113,7 +117,7 @@ for (binsize in binsizes) {
 			axis.text = element_text(color="black"),
 			plot.title = element_text(size=12, hjust=0.5), 
 			aspect.ratio  = 1.2) +
-		  labs(title = paste(label1, "vs", label2,"(", binsize, "bins", label1, "+ ) :", n_mapped," / ", n_total_1, "genes assigned"))
+		  labs(title = paste(label1, "vs", label2,"(", label1, "+ ) :", n_mapped," / ", n_total_1, "genes assigned"))
 
 		ggsave(file.path(pdir, paste0("GO_terms_bins_", binsize, "_", sample1, "_", sample2, "_", status1, ".pdf")), 
 		       plot = plotS1, device = cairo_pdf, width = 8, height = 6)
@@ -144,7 +148,7 @@ for (binsize in binsizes) {
 			axis.text = element_text(color="black"), 
 			plot.title = element_text(size=12, hjust=0.5), 
 			aspect.ratio  = 1.2) +
-		  labs(title = paste(label1, "vs", label2, "(", binsize, "bins", label2, "+ ) :", n_mapped_2," / ", n_total_2, "genes assigned"))
+		  labs(title = paste(label1, "vs", label2, "(", label2, "+ ) :", n_mapped_2," / ", n_total_2, "genes assigned"))
 
 		ggsave(file.path(pdir, paste0("GO_terms_bins_", binsize, "_", sample1, "_", sample2, "_", status2, ".pdf")), 
 		       plot = plotS2, device = cairo_pdf, width = 8, height = 6)

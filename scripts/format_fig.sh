@@ -1,6 +1,6 @@
 #!/bin/bash
 
-pDir=/home/anton/Bureau/PORE-C_repo/plots
+pDir=/home/anton/Bureau/PORE-C_repo_Sanger/plots
 
 for plot in $pDir/*.pdf; do
 	pdfcrop --margins 25 "$plot" "$plot"

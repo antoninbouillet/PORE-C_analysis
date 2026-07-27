@@ -28,7 +28,7 @@ if not num_cpus:
 num_cpus = int(num_cpus)
 
 # import des fichiers
-baseDir = "/home/anton/Bureau/PORE-C_repo"
+baseDir = "/home/anton/Bureau/PORE-C_repo_Sanger"
 cmDir = join(baseDir, "data/contact_maps/")
 
 # old colors
@@ -49,8 +49,18 @@ colorLegend = [
     for name, col in [("α", samplesToColor["alpha"]), ("β", samplesToColor["beta"]), ("α+STM", samplesToColor["STM"])]
 ]
 
-nameToChr = {"chr1": "NC_047559.1", "chr2": "NC_047560.1",  "chr3": "NC_047561.1", "chr4": "NC_047562.1", "chr5": "NC_047563.1",
-             "chr6": "NC_047564.1", "chr7": "NC_047565.1",  "chr8": "NC_047566.1", "chr9": "NC_047567.1", "chr10": "NC_047568.1"}
+nameToChr = {
+        "chr1": "NC_088853.1",
+        "chr2": "NC_088854.1",
+        "chr3": "NC_088855.1",
+        "chr4": "NC_088856.1",
+        "chr5": "NC_088857.1",
+        "chr6": "NC_088858.1",
+        "chr7": "NC_088859.1",
+        "chr8": "NC_088860.1",
+        "chr9": "NC_088861.1",
+        "chr10": "NC_088862.1"
+        }
 
 pDir = join(baseDir, "plots/contacts_distance")
 

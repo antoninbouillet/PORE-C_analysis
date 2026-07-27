@@ -30,27 +30,27 @@ color1 <- "#6BB0ED"
 colorBeta <- "#193D8A"
 colorSTM <- "#EDD472"
 
-zoomChr = "NC_047561.1"
-zoomStart = 2e7
-zoomEnd = 5.5e7
+zoomChr = "NC_088856.1"
+zoomStart = 3.5e7
+zoomEnd = 57946171
 
-baseDir <- "/home/anton/Bureau/PORE-C_repo/"
+baseDir <- "/home/anton/Bureau/PORE-C_repo_Sanger/"
 rDir <- paste0(baseDir, "data/regions")
 
 for (binsize in binsizes) {
 
   if (binsize == "1Mb") {
     pixelsize <- 0.47
-    zoomPixelsize <- 4.7
+    zoomPixelsize <- 4.9
     binInt = 1e6
     adjacentBins = baseAdjacentBins
   } else if (binsize == "500kb") {
     pixelsize <- 0.09
-    zoomPixelsize <- 2
+    zoomPixelsize <- 2.2
     binInt = 5e5
     adjacentBins = baseAdjacentBins * 2
   } else if (binsize == "250kb") {
-    pixelsize <- 0.01
+    pixelsize <- 0.02
     zoomPixelsize <- 0.75
     binInt = 2.5e5
     adjacentBins = baseAdjacentBins * 4

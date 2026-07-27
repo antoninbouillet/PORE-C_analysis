@@ -9,16 +9,17 @@ rm(list=ls())
 
 # load plots
 
-baseDir <- "/home/anton/Bureau/PORE-C_repo/plots/"
+baseDir <- "/home/anton/Bureau/PORE-C_repo_Sanger/plots/"
 binsizes <- c("1Mb", "500kb", "250kb")
 pDir <- paste0(baseDir, "HiCcompare/")
 
 
 chrSize = 1
 
-zoomChr = "NC_047561.1"
-zoomStart = 2e7
-zoomEnd = 5.5e7
+zoomChr = "NC_088856.1"
+zoomStart = 3.5e7
+zoomEnd = 57946171
+
 
 chrDiagram <- ggplot() +
   ## Chromosome
