@@ -10,7 +10,7 @@ comparisons=(alpha_beta alpha_STM)
 for binsize in "${binsizes[@]}"; do
 	for comp in "${comparisons[@]}"; do
 
-		bedtools intersect -wa -wb \
+		bedtools intersect -wb \
 			-a ${baseDir}/data/regions/all_signif_regions_${comp}_${binsize}.bed \
 			-b ${baseDir}/data/regions/genes.bed \
 			> ${baseDir}/data/regions/all_signif_genes_${comp}_${binsize}.bed

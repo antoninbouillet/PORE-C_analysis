@@ -15,6 +15,7 @@ comparisons <- list(c("alpha", "beta"), c("alpha", "STM"))
 # base distance (in bins) to define overlapping bins in the Venn diagrams
 # this distance is adjusted with the resolution, to search for overlap in the same intervals
 baseAdjacentBins <- 3
+p_cutoff = 0.05
 
 # old colors
 # alpha : #5948d9
@@ -79,7 +80,7 @@ for (binsize in binsizes) {
   
   	all_bins <- fread(file=file.path(rDir, paste0("all_bins_", sample1, "_", sample2, "_", binsize, ".bed")), header=T) %>% 
   	  mutate(status = ifelse(M<0, status1, status2),
-  		 is_signif = ifelse(p.adj < 0.05, TRUE, FALSE),
+  		 is_signif = ifelse(p.adj < p_cutoff, TRUE, FALSE),
   		 pval_log = -log10(p.adj))
   
 	n_signif_sample1 <- nrow(all_bins[all_bins$status == status1 & all_bins$is_signif == T, ])
@@ -128,7 +129,7 @@ for (binsize in binsizes) {
 		    aes(x, y, label = label),
 		    position = position_dodge(width = 0.7),
 		    check_overlap = TRUE) +
-  	  geom_hline(yintercept = -log10(0.05), linetype="dashed", linewidth=0.2) +
+  	  geom_hline(yintercept = -log10(p_cutoff), linetype="dashed", linewidth=0.2) +
   	  theme_bw(base_size=22) +
   	  theme(aspect.ratio = 1,
   		panel.grid = element_line(linetype="dashed", linewidth=0.2),
@@ -251,7 +252,7 @@ for (binsize in binsizes) {
   	# filtering the HIC tables by A value (mean of IF1 and IF2) tends to favor pairs with
   	# low IF (which are also the most distant) in the matrix with the lowest overall read counts (beta / STM)
   
-  	comp_d <- ggplot(data=all_bins[all_bins$p.adj < 0.05, ], aes(x=status, y=D, fill=status)) +
+  	comp_d <- ggplot(data=all_bins[all_bins$p.adj < p_cutoff, ], aes(x=status, y=D, fill=status)) +
   	  geom_boxplot(width=0.4, color="black", linewidth=0.8, outliers=F) +
   	  theme_bw(base_size=22) +
   	  theme(panel.grid=element_blank(),
@@ -265,8 +266,8 @@ for (binsize in binsizes) {
   		aspect.ratio=1.2,
   		legend.position="None") +
   	  labs(y="distance (bin)", x="") +
-  	  stat_compare_means(label.y = 0.98*max(all_bins[all_bins$p.adj < 0.05, ]$D), size = 4.5) +
-  	  scale_y_continuous(limits = c(0, 1.1*max(all_bins[all_bins$p.adj < 0.05, ]$D))) +
+  	  stat_compare_means(label.y = 0.98*max(all_bins[all_bins$p.adj < p_cutoff, ]$D), size = 4.5) +
+  	  scale_y_continuous(limits = c(0, 1.1*max(all_bins[all_bins$p.adj < p_cutoff, ]$D))) +
   	  scale_fill_manual(values=c(color1, color2))
   	
   	ggsave(file.path(pdir, paste0("comp_distance_", sample1, "_", sample2, "_", binsize, ".pdf")), 

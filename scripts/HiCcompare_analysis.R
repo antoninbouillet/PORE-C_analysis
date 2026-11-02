@@ -9,6 +9,8 @@ library(ggpubr)
 
 binsizes <- c("1Mb", "500kb", "250kb")
 comparisons <- list(c("alpha", "beta"), c("alpha", "STM"))
+p_cutoff = 0.05
+percentile = 0.75
 
 print(comparisons)
 
@@ -32,15 +34,6 @@ for (binsize in binsizes) {
 
 	for (comparison in comparisons) {
 
-		if (binsize == "1Mb") {
-		  A_min = 30
-		} else if (binsize == "500kb") {
-		  A_min = 15
-		} else if (binsize == "250kb") {
-		  A_min = 7.5
-		}
-
-	 
 	  sample1 <- comparison[1]
 	  sample2 <- comparison[2]
 	  
@@ -66,7 +59,7 @@ for (binsize in binsizes) {
 	    filter_params(chr_table)
 	    chr_table <- hic_loess(chr_table, Plot = T, Plot.smooth = T)
 	    # get the nth percentile of the A value
-	    Amins = quantile(chr_table$A, probs = c(0.75))
+	    Amins = quantile(chr_table$A, probs = c(percentile))
 	    print(Amins)
 	    Amin = Amins[[1]]
 	    table_chr <- hic_compare(chr_table, adjust.dist = TRUE, A.min = Amin, p.method = 'fdr', Plot = TRUE)
@@ -84,7 +77,7 @@ for (binsize in binsizes) {
 	  for (chromosome in chromosomes) {
 		  chromTable <- get(paste0("table_", chromosome))
 		  tableList[[chromosome]] <- chromTable
-		  signifTableList[[chromosome]] <- chromTable[chromTable$p.adj < 0.05, ]
+		  signifTableList[[chromosome]] <- chromTable[chromTable$p.adj < p_cutoff, ]
 	  }
 	    
 	  all_bins <- do.call(rbind, tableList)

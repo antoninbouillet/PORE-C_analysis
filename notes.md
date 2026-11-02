@@ -68,3 +68,8 @@ Zoom distance cvd avec résolution + faible -> comparaison avec downsampling
 - sur fig2 B : schéma chromosome 3 -> zoom région
 - retirer Venn fig2 
 - STM -> alpha+ STM
+
+## 28/06/26
+
+- tester GO avec même seuil que pour Roslin (~A < 25)
+- tester incréments percentiles entre 60 et 75
