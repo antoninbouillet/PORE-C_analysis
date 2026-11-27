@@ -73,3 +73,6 @@ Zoom distance cvd avec résolution + faible -> comparaison avec downsampling
 
 - tester GO avec même seuil que pour Roslin (~A < 25)
 - tester incréments percentiles entre 60 et 75
+- ajouter courbe P(s) + dérivée par chromosome
+- cartes de contact avec insulation score
+- (cf. analyses https://doi.org/10.1093/molbev/msaf270)
